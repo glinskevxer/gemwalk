@@ -71,7 +71,20 @@ M001 = Migration(
     """,
 )
 
-MIGRATIONS: tuple[Migration, ...] = (M001,)
+M002 = Migration(
+    number=2,
+    name="the counters every label is handed out of",
+    script="""
+    CREATE TABLE label_run (
+      kind   TEXT NOT NULL,
+      scope  TEXT NOT NULL,
+      last   INTEGER NOT NULL,
+      PRIMARY KEY (kind, scope)
+    );
+    """,
+)
+
+MIGRATIONS: tuple[Migration, ...] = (M001, M002)
 
 
 def _applied(book: Book) -> set[int]:
