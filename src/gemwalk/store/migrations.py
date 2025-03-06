@@ -84,7 +84,35 @@ M002 = Migration(
     """,
 )
 
-MIGRATIONS: tuple[Migration, ...] = (M001, M002)
+M003 = Migration(
+    number=3,
+    name="the devices sunk into the refuse",
+    script="""
+    CREATE TABLE device (
+      label          TEXT PRIMARY KEY,
+      site           TEXT NOT NULL REFERENCES site(label),
+      area           TEXT NOT NULL REFERENCES area(label),
+      kind           TEXT NOT NULL,
+      station        TEXT NOT NULL,
+      total_depth    REAL NOT NULL,
+      screen_top     REAL NOT NULL,
+      screen_bottom  REAL NOT NULL,
+      state          TEXT NOT NULL,
+      drilled_on     TEXT NOT NULL,
+      connected_on   TEXT,
+      offline_since  TEXT,
+      abandoned_on   TEXT,
+      hov_degrees    REAL,
+      hov_approved   TEXT
+    );
+
+    CREATE INDEX device_by_site ON device(site);
+    CREATE INDEX device_by_area ON device(area);
+    CREATE INDEX device_by_state ON device(state);
+    """,
+)
+
+MIGRATIONS: tuple[Migration, ...] = (M001, M002, M003)
 
 
 def _applied(book: Book) -> set[int]:

@@ -1,0 +1,98 @@
+"""Rows of the device table."""
+
+from __future__ import annotations
+
+from typing import Any, ClassVar
+
+from gemwalk.clock import read_day
+from gemwalk.model.device import Device, Kind, State
+from gemwalk.model.landfill import read_optional_day
+from gemwalk.store.book import Row
+from gemwalk.store.repo import Repository
+
+
+class DeviceRepository(Repository[Device]):
+    """Every device ever put in the ground at every site in the book."""
+
+    table: ClassVar[str] = "device"
+    kind: ClassVar[str] = "device"
+    columns: ClassVar[tuple[str, ...]] = (
+        "label",
+        "site",
+        "area",
+        "kind",
+        "station",
+        "total_depth",
+        "screen_top",
+        "screen_bottom",
+        "state",
+        "drilled_on",
+        "connected_on",
+        "offline_since",
+        "abandoned_on",
+        "hov_degrees",
+        "hov_approved",
+    )
+
+    def read(self, row: Row) -> Device:
+        """Turn one device row into a device."""
+        return Device(
+            label=str(row["label"]),
+            site=str(row["site"]),
+            area=str(row["area"]),
+            kind=Kind(str(row["kind"])),
+            station=str(row["station"]),
+            total_depth=float(row["total_depth"]),
+            screen_top=float(row["screen_top"]),
+            screen_bottom=float(row["screen_bottom"]),
+            state=State(str(row["state"])),
+            drilled_on=read_day(str(row["drilled_on"])),
+            connected_on=read_optional_day(row["connected_on"]),
+            offline_since=read_optional_day(row["offline_since"]),
+            abandoned_on=read_optional_day(row["abandoned_on"]),
+            hov_degrees=None if row["hov_degrees"] is None else float(row["hov_degrees"]),
+            hov_approved=read_optional_day(row["hov_approved"]),
+        )
+
+    def write(self, item: Device) -> dict[str, Any]:
+        """Turn one device into the column values it is stored as."""
+        return {
+            "label": item.label,
+            "site": item.site,
+            "area": item.area,
+            "kind": item.kind.value,
+            "station": item.station,
+            "total_depth": item.total_depth,
+            "screen_top": item.screen_top,
+            "screen_bottom": item.screen_bottom,
+            "state": item.state.value,
+            "drilled_on": item.drilled_on.isoformat(),
+            "connected_on": _day(item.connected_on),
+            "offline_since": _day(item.offline_since),
+            "abandoned_on": _day(item.abandoned_on),
+            "hov_degrees": item.hov_degrees,
+            "hov_approved": _day(item.hov_approved),
+        }
+
+    def of_site(self, site: str) -> list[Device]:
+        """Every device at one site, abandoned ones included."""
+        return self.where("site = ?", (site,))
+
+    def of_area(self, area: str) -> list[Device]:
+        """Every device in one filling area."""
+        return self.where("area = ?", (area,))
+
+    def monitored(self, site: str) -> list[Device]:
+        """Every device at one site that has to appear on the monthly run."""
+        return self.where("site = ? AND state = ?", (site, State.CONNECTED.value))
+
+    def in_state(self, site: str, state: State) -> list[Device]:
+        """Every device at one site in one state."""
+        return self.where("site = ? AND state = ?", (site, state.value))
+
+
+def _day(value: object) -> str | None:
+    return None if value is None else str(value)
+
+
+__all__ = ["DeviceRepository"]
