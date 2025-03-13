@@ -64,6 +64,7 @@ class Device:
     abandoned_on: dt.date | None = None
     hov_degrees: float | None = None
     hov_approved: dt.date | None = None
+    lateral: str | None = None
 
     def __post_init__(self) -> None:
         if self.total_depth <= 0:
@@ -90,6 +91,15 @@ class Device:
     def is_connected(self) -> bool:
         """True when the device is on the pipe tree and being pulled on."""
         return self.state is State.CONNECTED
+
+    @property
+    def is_piped(self) -> bool:
+        """True when the device has a lateral to send its gas down."""
+        return self.lateral is not None
+
+    def tie_into(self, lateral: str) -> Device:
+        """Record which lateral the device's wellhead is piped to."""
+        return replace(self, lateral=lateral)
 
     @property
     def is_monitored(self) -> bool:

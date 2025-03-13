@@ -32,6 +32,7 @@ class DeviceRepository(Repository[Device]):
         "abandoned_on",
         "hov_degrees",
         "hov_approved",
+        "lateral",
     )
 
     def read(self, row: Row) -> Device:
@@ -52,6 +53,7 @@ class DeviceRepository(Repository[Device]):
             abandoned_on=read_optional_day(row["abandoned_on"]),
             hov_degrees=None if row["hov_degrees"] is None else float(row["hov_degrees"]),
             hov_approved=read_optional_day(row["hov_approved"]),
+            lateral=None if row["lateral"] is None else str(row["lateral"]),
         )
 
     def write(self, item: Device) -> dict[str, Any]:
@@ -72,6 +74,7 @@ class DeviceRepository(Repository[Device]):
             "abandoned_on": _day(item.abandoned_on),
             "hov_degrees": item.hov_degrees,
             "hov_approved": _day(item.hov_approved),
+            "lateral": item.lateral,
         }
 
     def of_site(self, site: str) -> list[Device]:
@@ -89,6 +92,14 @@ class DeviceRepository(Repository[Device]):
     def in_state(self, site: str, state: State) -> list[Device]:
         """Every device at one site in one state."""
         return self.where("site = ? AND state = ?", (site, state.value))
+
+    def on_lateral(self, lateral: str) -> list[Device]:
+        """Every device piped to one lateral."""
+        return self.where("lateral = ?", (lateral,))
+
+    def unpiped(self, site: str) -> list[Device]:
+        """Every device at one site with no lateral to send its gas down."""
+        return self.where("site = ? AND lateral IS NULL", (site,))
 
 
 def _day(value: object) -> str | None:

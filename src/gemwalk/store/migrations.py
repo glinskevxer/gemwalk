@@ -112,7 +112,42 @@ M003 = Migration(
     """,
 )
 
-MIGRATIONS: tuple[Migration, ...] = (M001, M002, M003)
+M004 = Migration(
+    number=4,
+    name="the pipe tree the devices hang off",
+    script="""
+    CREATE TABLE header (
+      label         TEXT PRIMARY KEY,
+      site          TEXT NOT NULL REFERENCES site(label),
+      name          TEXT NOT NULL,
+      diameter      REAL NOT NULL,
+      material      TEXT NOT NULL,
+      length_feet   REAL NOT NULL,
+      installed_on  TEXT NOT NULL,
+      retired_on    TEXT
+    );
+
+    CREATE TABLE lateral (
+      label         TEXT PRIMARY KEY,
+      site          TEXT NOT NULL REFERENCES site(label),
+      header        TEXT NOT NULL REFERENCES header(label),
+      diameter      REAL NOT NULL,
+      material      TEXT NOT NULL,
+      length_feet   REAL NOT NULL,
+      installed_on  TEXT NOT NULL,
+      retired_on    TEXT
+    );
+
+    ALTER TABLE device ADD COLUMN lateral TEXT REFERENCES lateral(label);
+
+    CREATE INDEX header_by_site ON header(site);
+    CREATE INDEX lateral_by_site ON lateral(site);
+    CREATE INDEX lateral_by_header ON lateral(header);
+    CREATE INDEX device_by_lateral ON device(lateral);
+    """,
+)
+
+MIGRATIONS: tuple[Migration, ...] = (M001, M002, M003, M004)
 
 
 def _applied(book: Book) -> set[int]:
