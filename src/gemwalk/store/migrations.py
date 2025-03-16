@@ -147,7 +147,47 @@ M004 = Migration(
     """,
 )
 
-MIGRATIONS: tuple[Migration, ...] = (M001, M002, M003, M004)
+M005 = Migration(
+    number=5,
+    name="the monthly monitoring run and the wellhead readings on it",
+    script="""
+    CREATE TABLE run (
+      label      TEXT PRIMARY KEY,
+      site       TEXT NOT NULL REFERENCES site(label),
+      started_on TEXT NOT NULL,
+      closed_on  TEXT,
+      monitor    TEXT NOT NULL,
+      meter      TEXT NOT NULL,
+      note       TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE TABLE reading (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      run           TEXT NOT NULL REFERENCES run(label),
+      device        TEXT NOT NULL REFERENCES device(label),
+      taken_on      TEXT NOT NULL,
+      methane       REAL NOT NULL,
+      carbon        REAL NOT NULL,
+      oxygen        REAL NOT NULL,
+      balance       REAL NOT NULL,
+      temperature   REAL NOT NULL,
+      static        REAL NOT NULL,
+      applied       REAL NOT NULL,
+      flow          REAL NOT NULL,
+      valve_before  REAL NOT NULL,
+      valve_after   REAL NOT NULL,
+      note          TEXT NOT NULL DEFAULT '',
+      UNIQUE (run, device)
+    );
+
+    CREATE INDEX run_by_site ON run(site);
+    CREATE INDEX reading_by_run ON reading(run);
+    CREATE INDEX reading_by_device ON reading(device);
+    CREATE INDEX reading_by_day ON reading(taken_on);
+    """,
+)
+
+MIGRATIONS: tuple[Migration, ...] = (M001, M002, M003, M004, M005)
 
 
 def _applied(book: Book) -> set[int]:

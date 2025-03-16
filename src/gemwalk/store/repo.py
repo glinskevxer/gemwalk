@@ -31,6 +31,7 @@ class Repository(Generic[T]):
     key: ClassVar[str] = "label"
     columns: ClassVar[tuple[str, ...]] = ()
     order: ClassVar[str] = "label"
+    auto: ClassVar[bool] = False
 
     def __init__(self, book: Book) -> None:
         self.book = book
@@ -47,6 +48,17 @@ class Repository(Generic[T]):
         """The primary key of a model object."""
         value = getattr(item, self.key)
         return str(value)
+
+    def with_key(self, item: T, key: int) -> T:
+        """The same object carrying the key sqlite just chose for it."""
+        raise NotImplementedError
+
+    @property
+    def insert_columns(self) -> tuple[str, ...]:
+        """The columns an insert writes, which leaves out a key sqlite chooses."""
+        if self.auto:
+            return tuple(name for name in self.columns if name != self.key)
+        return self.columns
 
     def _select(self, where: str = "", params: tuple[Any, ...] = ()) -> list[Row]:
         clause = f" WHERE {where}" if where else ""
