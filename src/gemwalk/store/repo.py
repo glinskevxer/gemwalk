@@ -87,14 +87,19 @@ class Repository(Generic[T]):
         """Put a new thing in the book, refusing a label it already holds."""
         label = self.label_of(item)
         values = self.write(item)
-        placeholders = ", ".join(f":{name}" for name in self.columns)
-        names = ", ".join(self.columns)
+        written = self.insert_columns
+        placeholders = ", ".join(f":{name}" for name in written)
+        names = ", ".join(written)
         try:
-            self.book.execute(f"INSERT INTO {self.table} ({names}) VALUES ({placeholders})", values)
+            cursor = self.book.execute(
+                f"INSERT INTO {self.table} ({names}) VALUES ({placeholders})", values
+            )
         except sqlite3.IntegrityError as failure:
             if "UNIQUE" in str(failure):
                 raise DuplicateError(self.kind, label) from None
             raise
+        if self.auto:
+            return self.with_key(item, int(cursor.lastrowid or 0))
         return item
 
     def put(self, item: T) -> T:
