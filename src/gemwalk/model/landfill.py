@@ -16,7 +16,7 @@ from enum import Enum
 
 from gemwalk.clock import read_day
 from gemwalk.errors import OrderError, RuleError
-from gemwalk.rules import Standard
+from gemwalk.rules import Election, Standard
 
 
 class Cover(Enum):
@@ -42,6 +42,9 @@ class Site:
     design_capacity: float
     opened_on: dt.date
     closed_on: dt.date | None = None
+    nitrogen_alternative: bool = False
+    higher_pressure: bool = False
+    elected_on: dt.date | None = None
 
     def __post_init__(self) -> None:
         if not self.label.strip():
@@ -71,6 +74,40 @@ class Site:
     def over_design_capacity(self, standard: Standard) -> bool:
         """True when the site is big enough for the standard to reach it."""
         return self.design_capacity >= standard.design_capacity_mg
+
+    def election(self, standard: Standard, on: dt.date | None = None) -> Election:
+        """What the site has elected, as the assessment reads it.
+
+        An election is only worth anything where the standard offers it, and
+        only from the day it was made. A site that elected the nitrogen
+        alternative and then moved under a standard that has none reads back as
+        having elected nothing.
+        """
+        if self.elected_on is None:
+            return Election()
+        if on is not None and on < self.elected_on:
+            return Election()
+        return Election(
+            nitrogen_alternative=self.nitrogen_alternative and standard.allows_nitrogen,
+            higher_pressure=self.higher_pressure and standard.allows_higher_pressure,
+        )
+
+    def elect(
+        self,
+        on: dt.date,
+        *,
+        nitrogen_alternative: bool = False,
+        higher_pressure: bool = False,
+    ) -> Site:
+        """Record what the site has chosen where the standard leaves a choice."""
+        if on < self.opened_on:
+            raise OrderError("election", str(self.opened_on), str(on))
+        return replace(
+            self,
+            nitrogen_alternative=nitrogen_alternative,
+            higher_pressure=higher_pressure,
+            elected_on=on,
+        )
 
 
 @dataclass(frozen=True)

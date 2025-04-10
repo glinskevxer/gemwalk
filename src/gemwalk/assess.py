@@ -36,7 +36,7 @@ from enum import Enum
 
 from gemwalk.model.device import Device
 from gemwalk.model.reading import Reading
-from gemwalk.rules import Finding, Standard
+from gemwalk.rules import Election, Finding, Standard
 
 
 class Concern(Enum):
@@ -65,14 +65,6 @@ class Judgement:
 
     def __str__(self) -> str:
         return self.words
-
-
-@dataclass(frozen=True)
-class Election:
-    """What a site has chosen, where the standard leaves it a choice."""
-
-    nitrogen_alternative: bool = False
-    higher_pressure: bool = False
 
 
 @dataclass(frozen=True)

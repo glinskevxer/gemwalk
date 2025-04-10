@@ -67,6 +67,18 @@ class SurfaceWindows:
 
 
 @dataclass(frozen=True)
+class Election:
+    """What a site has chosen, where its standard leaves it a choice.
+
+    It sits here rather than with the assessment because a site records it
+    long before anybody reads a wellhead against it.
+    """
+
+    nitrogen_alternative: bool = False
+    higher_pressure: bool = False
+
+
+@dataclass(frozen=True)
 class Standard:
     """One federal standard, with every number it fixes."""
 
@@ -179,6 +191,7 @@ __all__ = [
     "STANDARDS",
     "WWW",
     "XXX",
+    "Election",
     "Finding",
     "Standard",
     "SurfaceWindows",

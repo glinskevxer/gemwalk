@@ -187,7 +187,17 @@ M005 = Migration(
     """,
 )
 
-MIGRATIONS: tuple[Migration, ...] = (M001, M002, M003, M004, M005)
+M006 = Migration(
+    number=6,
+    name="what a site has elected where the standard leaves a choice",
+    script="""
+    ALTER TABLE site ADD COLUMN nitrogen_alternative INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE site ADD COLUMN higher_pressure INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE site ADD COLUMN elected_on TEXT;
+    """,
+)
+
+MIGRATIONS: tuple[Migration, ...] = (M001, M002, M003, M004, M005, M006)
 
 
 def _applied(book: Book) -> set[int]:

@@ -12,7 +12,7 @@ import datetime as dt
 
 from gemwalk.errors import RuleError
 from gemwalk.model.landfill import Area, Cover, Site
-from gemwalk.rules import Standard, standard
+from gemwalk.rules import Election, Standard, standard
 from gemwalk.store.book import Book
 from gemwalk.store.sites import AreaRepository, SiteRepository
 
@@ -57,6 +57,35 @@ class SiteDesk:
     def zone_of(self, label: str) -> str:
         """The wall clock the site's operating records are kept on."""
         return self.sites.get(label).zone
+
+    def elect(
+        self,
+        label: str,
+        on: dt.date,
+        *,
+        nitrogen_alternative: bool = False,
+        higher_pressure: bool = False,
+    ) -> Site:
+        """Record the choices a site has made under its standard."""
+        site = self.sites.get(label)
+        subpart = standard(site.standard)
+        if nitrogen_alternative and not subpart.allows_nitrogen:
+            raise RuleError(subpart.citation, "this standard has no nitrogen alternative")
+        if higher_pressure and not subpart.allows_higher_pressure:
+            raise RuleError(subpart.citation, "this standard has no pressure alternative")
+        with self.book.writing():
+            return self.sites.put(
+                site.elect(
+                    on,
+                    nitrogen_alternative=nitrogen_alternative,
+                    higher_pressure=higher_pressure,
+                )
+            )
+
+    def election_of(self, label: str, on: dt.date | None = None) -> Election:
+        """What the site had elected as of *on*, read through its standard."""
+        site = self.sites.get(label)
+        return site.election(standard(site.standard), on)
 
     def close_site(self, label: str, on: dt.date) -> Site:
         """Record a site as having taken its last load."""

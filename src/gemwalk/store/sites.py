@@ -24,6 +24,9 @@ class SiteRepository(Repository[Site]):
         "design_capacity",
         "opened_on",
         "closed_on",
+        "nitrogen_alternative",
+        "higher_pressure",
+        "elected_on",
     )
 
     def read(self, row: Row) -> Site:
@@ -37,6 +40,9 @@ class SiteRepository(Repository[Site]):
             design_capacity=float(row["design_capacity"]),
             opened_on=read_day(str(row["opened_on"])),
             closed_on=read_optional_day(row["closed_on"]),
+            nitrogen_alternative=bool(row["nitrogen_alternative"]),
+            higher_pressure=bool(row["higher_pressure"]),
+            elected_on=read_optional_day(row["elected_on"]),
         )
 
     def write(self, item: Site) -> dict[str, Any]:
@@ -50,6 +56,9 @@ class SiteRepository(Repository[Site]):
             "design_capacity": item.design_capacity,
             "opened_on": item.opened_on.isoformat(),
             "closed_on": None if item.closed_on is None else item.closed_on.isoformat(),
+            "nitrogen_alternative": int(item.nitrogen_alternative),
+            "higher_pressure": int(item.higher_pressure),
+            "elected_on": None if item.elected_on is None else item.elected_on.isoformat(),
         }
 
 
