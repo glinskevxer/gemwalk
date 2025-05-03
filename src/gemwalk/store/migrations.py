@@ -197,7 +197,45 @@ M006 = Migration(
     """,
 )
 
-MIGRATIONS: tuple[Migration, ...] = (M001, M002, M003, M004, M005, M006)
+M007 = Migration(
+    number=7,
+    name="the exceedance clocks a bad wellhead reading starts",
+    script="""
+    CREATE TABLE exceedance (
+      label       TEXT PRIMARY KEY,
+      site        TEXT NOT NULL REFERENCES site(label),
+      device      TEXT NOT NULL REFERENCES device(label),
+      kind        TEXT NOT NULL,
+      opened_on   TEXT NOT NULL,
+      reading     INTEGER NOT NULL REFERENCES reading(id),
+      value       REAL NOT NULL,
+      limit_value REAL NOT NULL,
+      stage       TEXT NOT NULL,
+      closed_on   TEXT,
+      note        TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE TABLE recheck (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      exceedance  TEXT NOT NULL REFERENCES exceedance(label),
+      taken_on    TEXT NOT NULL,
+      reading     INTEGER REFERENCES reading(id),
+      value       REAL NOT NULL,
+      clear       INTEGER NOT NULL,
+      stage       TEXT NOT NULL,
+      note        TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE INDEX exceedance_by_site ON exceedance(site);
+    CREATE INDEX exceedance_by_device ON exceedance(device);
+    CREATE INDEX exceedance_by_stage ON exceedance(stage);
+    CREATE INDEX exceedance_by_reading ON exceedance(reading);
+    CREATE INDEX recheck_by_exceedance ON recheck(exceedance);
+    CREATE INDEX recheck_by_reading ON recheck(reading);
+    """,
+)
+
+MIGRATIONS: tuple[Migration, ...] = (M001, M002, M003, M004, M005, M006, M007)
 
 
 def _applied(book: Book) -> set[int]:
