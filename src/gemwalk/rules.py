@@ -71,13 +71,20 @@ class Windows:
 class SurfaceWindows:
     """How long the operator has after a surface reading over the limit.
 
-    A cover repair and a remonitor, then a second pass at both, then the same
-    drilling window the wellhead findings end at.
+    These do not work the way the wellhead windows do, and the difference is
+    the whole trick of the surface programme. A wellhead's three windows are all
+    counted from the one bad reading. A surface hit's repair window is counted
+    from the day it was found, but its remonitor window is counted from the day
+    the repair was made, so a crew that fixes a spot on day one has to be back
+    on it by day eleven and a crew that fixes it on day ten has until day
+    twenty. Only the last window, the one that means drilling, goes back to the
+    day the hit was found.
     """
 
     repair: int
     remonitor: int
     expand: int
+    attempts: int = 2
 
 
 @dataclass(frozen=True)
@@ -106,6 +113,9 @@ class Standard:
     surface_limit: Ppmv
     nmoc_threshold_mg: float
     design_capacity_mg: float
+    wind_average_mph: float
+    wind_gust_mph: float
+    sem_spacing_metres: float
     windows: Windows
     surface_windows: SurfaceWindows
     active_install_years: int
@@ -132,6 +142,9 @@ WWW = Standard(
     surface_limit=Ppmv(500.0),
     nmoc_threshold_mg=50.0,
     design_capacity_mg=2_500_000.0,
+    wind_average_mph=5.0,
+    wind_gust_mph=10.0,
+    sem_spacing_metres=30.0,
     windows=Windows(correct=5, action=15, expand=120),
     surface_windows=SurfaceWindows(repair=10, remonitor=10, expand=120),
     active_install_years=5,
@@ -153,6 +166,9 @@ XXX = Standard(
     surface_limit=Ppmv(500.0),
     nmoc_threshold_mg=34.0,
     design_capacity_mg=2_500_000.0,
+    wind_average_mph=5.0,
+    wind_gust_mph=10.0,
+    sem_spacing_metres=30.0,
     windows=Windows(correct=5, action=15, expand=120),
     surface_windows=SurfaceWindows(repair=10, remonitor=10, expand=120),
     active_install_years=5,
@@ -174,6 +190,9 @@ CF = Standard(
     surface_limit=Ppmv(500.0),
     nmoc_threshold_mg=34.0,
     design_capacity_mg=2_500_000.0,
+    wind_average_mph=5.0,
+    wind_gust_mph=10.0,
+    sem_spacing_metres=30.0,
     windows=Windows(correct=5, action=15, expand=120),
     surface_windows=SurfaceWindows(repair=10, remonitor=10, expand=120),
     active_install_years=5,

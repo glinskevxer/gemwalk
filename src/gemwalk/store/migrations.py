@@ -235,7 +235,52 @@ M007 = Migration(
     """,
 )
 
-MIGRATIONS: tuple[Migration, ...] = (M001, M002, M003, M004, M005, M006, M007)
+M008 = Migration(
+    number=8,
+    name="the quarterly walkover of the cover and what it found",
+    script="""
+    CREATE TABLE walk (
+      label       TEXT PRIMARY KEY,
+      site        TEXT NOT NULL REFERENCES site(label),
+      quarter     TEXT NOT NULL,
+      started_on  TEXT NOT NULL,
+      finished_on TEXT,
+      monitor     TEXT NOT NULL,
+      instrument  TEXT NOT NULL,
+      background  REAL NOT NULL,
+      wind_mean   REAL NOT NULL,
+      wind_gust   REAL NOT NULL,
+      spacing     REAL NOT NULL,
+      note        TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE TABLE hit (
+      label         TEXT PRIMARY KEY,
+      walk          TEXT NOT NULL REFERENCES walk(label),
+      site          TEXT NOT NULL REFERENCES site(label),
+      area          TEXT NOT NULL REFERENCES area(label),
+      station       TEXT NOT NULL,
+      reading       REAL NOT NULL,
+      cover         TEXT NOT NULL,
+      found_on      TEXT NOT NULL,
+      stage         TEXT NOT NULL,
+      attempt       INTEGER NOT NULL DEFAULT 1,
+      repaired_on   TEXT,
+      remonitor_on  TEXT,
+      closed_on     TEXT,
+      note          TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE INDEX walk_by_site ON walk(site);
+    CREATE INDEX walk_by_quarter ON walk(quarter);
+    CREATE INDEX hit_by_walk ON hit(walk);
+    CREATE INDEX hit_by_site ON hit(site);
+    CREATE INDEX hit_by_area ON hit(area);
+    CREATE INDEX hit_by_stage ON hit(stage);
+    """,
+)
+
+MIGRATIONS: tuple[Migration, ...] = (M001, M002, M003, M004, M005, M006, M007, M008)
 
 
 def _applied(book: Book) -> set[int]:
