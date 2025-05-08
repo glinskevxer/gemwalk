@@ -155,6 +155,11 @@ class ReadingRepository(Repository[Reading]):
         row = self.book.one("SELECT * FROM reading WHERE run = ? AND device = ?", (run, device))
         return None if row is None else self.read(row)
 
+    def id_on_run(self, run: str, device: str) -> int:
+        """The number of the reading of one device on one run."""
+        found = self.on_run_for(run, device)
+        return 0 if found is None else found.id
+
     def latest_for(self, device: str, on: str) -> Reading | None:
         """The most recent reading at a wellhead on or before a day."""
         row = self.book.one(

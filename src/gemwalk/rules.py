@@ -34,6 +34,20 @@ class Finding(Enum):
     def __str__(self) -> str:
         return self.value
 
+    @property
+    def family(self) -> str:
+        """The limit this finding is one of the two readings of.
+
+        Oxygen and nitrogen are the same limit read two ways, and a site can
+        move from one to the other while a clock is running. Matching a new
+        reading to an open clock has to be done on the family, or a site that
+        elects the alternative half way through leaves an oxygen clock that
+        nothing will ever close.
+        """
+        if self in (Finding.OXYGEN, Finding.NITROGEN):
+            return "gas"
+        return self.value
+
 
 @dataclass(frozen=True)
 class Windows:

@@ -80,6 +80,13 @@ class ExceedanceRepository(Repository[Exceedance]):
         )
         return None if row is None else self.read(row)
 
+    def open_of_family(self, device: str, kind: Finding) -> Exceedance | None:
+        """The open exceedance on the same limit as *kind*, read either way."""
+        for found in self.open_on_device(device):
+            if found.kind.family == kind.family:
+                return found
+        return None
+
     def of_device(self, device: str) -> list[Exceedance]:
         """Every exceedance ever opened on one wellhead, oldest first."""
         rows = self.book.all(
