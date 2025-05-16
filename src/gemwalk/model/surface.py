@@ -112,6 +112,20 @@ class Walk:
             )
         return tuple(found)
 
+    def limit(self, standard: Standard) -> Ppmv:
+        """What a reading on this walk has to beat to be a hit.
+
+        The standard is five hundred parts per million **above background**, so
+        the floor moves with the walk. Two crews on the same cover on the same
+        morning can read the same spot and disagree about whether it is a hit,
+        and both of them are right.
+        """
+        return Ppmv(self.background + standard.surface_limit.value)
+
+    def is_over(self, reading: float, standard: Standard) -> bool:
+        """True when a reading on this walk is a hit."""
+        return reading >= self.limit(standard).value
+
     def finish(self, on: dt.date) -> Walk:
         """Close the walk off once the whole cover has been crossed."""
         if not self.is_open:
