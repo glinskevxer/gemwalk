@@ -89,12 +89,20 @@ class Ppmv:
 
 @dataclass(frozen=True, order=True)
 class Temperature:
-    """A wellhead temperature, held in Fahrenheit because the sheet is."""
+    """A temperature, held in Fahrenheit because every sheet on the site is.
+
+    The range is wide because the same type carries two very different things.
+    A wellhead thermocouple reads somewhere between freezing and about a
+    hundred and forty. A flare chamber runs at fifteen hundred. Narrowing this
+    to the wellhead range was the first thing the plant records broke, so the
+    tighter check belongs where a wellhead is being read and not here.
+    """
 
     fahrenheit: float
 
     LOW: ClassVar[float] = -40.0
-    HIGH: ClassVar[float] = 400.0
+    HIGH: ClassVar[float] = 2_500.0
+    WELLHEAD_HIGH: ClassVar[float] = 400.0
 
     def __post_init__(self) -> None:
         if not self.LOW <= self.fahrenheit <= self.HIGH:
@@ -109,6 +117,11 @@ class Temperature:
         if unit in {"c", "degc", "deg c", "°c"}:
             return cls(number * 9.0 / 5.0 + 32.0)
         raise UnitError(text, "a temperature")
+
+    @property
+    def is_wellhead_range(self) -> bool:
+        """True when a thermocouple in a wellhead could have produced this."""
+        return self.fahrenheit <= self.WELLHEAD_HIGH
 
     @property
     def celsius(self) -> float:

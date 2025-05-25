@@ -90,6 +90,11 @@ class Reading:
                 raise RuleError("reading", f"a valve {name} the visit cannot be at {turns:g} turns")
         if self.flow < 0:
             raise RuleError("reading", "a wellhead cannot flow backwards")
+        if not Temperature(self.temperature).is_wellhead_range:
+            raise RuleError(
+                "reading",
+                f"{self.temperature:g} F is hotter than a wellhead thermocouple reads",
+            )
 
     @property
     def total(self) -> float:

@@ -42,6 +42,12 @@ def test_the_regulation_reads_the_sheet_back_in_celsius() -> None:
     assert Temperature.parse("131 F").celsius == pytest.approx(55.0)
 
 
+def test_a_flare_chamber_is_a_temperature_and_is_not_a_wellhead_one() -> None:
+    chamber = Temperature.parse("1512 F")
+    assert not chamber.is_wellhead_range
+    assert Temperature.parse("131 F").is_wellhead_range
+
+
 def test_pressure_keeps_its_sign() -> None:
     assert Pressure.parse("-1.40 in. w.c.").inches == pytest.approx(-1.4)
 

@@ -280,7 +280,63 @@ M008 = Migration(
     """,
 )
 
-MIGRATIONS: tuple[Migration, ...] = (M001, M002, M003, M004, M005, M006, M007, M008)
+M009 = Migration(
+    number=9,
+    name="the blower station and the devices that burn what it pulls",
+    script="""
+    CREATE TABLE control (
+      label        TEXT PRIMARY KEY,
+      site         TEXT NOT NULL REFERENCES site(label),
+      name         TEXT NOT NULL,
+      kind         TEXT NOT NULL,
+      capacity     REAL NOT NULL,
+      minimum_temp REAL,
+      installed_on TEXT NOT NULL,
+      retired_on   TEXT
+    );
+
+    CREATE TABLE operation (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      control     TEXT NOT NULL REFERENCES control(label),
+      at          TEXT NOT NULL,
+      running     INTEGER NOT NULL,
+      flow        REAL NOT NULL,
+      methane     REAL NOT NULL,
+      temperature REAL,
+      note        TEXT NOT NULL DEFAULT '',
+      UNIQUE (control, at)
+    );
+
+    CREATE TABLE outage (
+      label      TEXT PRIMARY KEY,
+      control    TEXT NOT NULL REFERENCES control(label),
+      site       TEXT NOT NULL REFERENCES site(label),
+      started_at TEXT NOT NULL,
+      ended_at   TEXT,
+      reason     TEXT NOT NULL,
+      planned    INTEGER NOT NULL DEFAULT 0,
+      note       TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE INDEX control_by_site ON control(site);
+    CREATE INDEX operation_by_control ON operation(control);
+    CREATE INDEX operation_by_at ON operation(at);
+    CREATE INDEX outage_by_control ON outage(control);
+    CREATE INDEX outage_by_site ON outage(site);
+    """,
+)
+
+MIGRATIONS: tuple[Migration, ...] = (
+    M001,
+    M002,
+    M003,
+    M004,
+    M005,
+    M006,
+    M007,
+    M008,
+    M009,
+)
 
 
 def _applied(book: Book) -> set[int]:

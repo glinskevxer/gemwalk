@@ -87,6 +87,11 @@ def test_a_wellhead_cannot_flow_backwards() -> None:
         a_reading(flow=-4.0)
 
 
+def test_a_flare_chamber_temperature_on_a_wellhead_sheet_is_refused() -> None:
+    with pytest.raises(RuleError, match="thermocouple"):
+        a_reading(temperature=1512.0)
+
+
 def test_a_valve_left_where_it_was_found_was_not_turned() -> None:
     assert not a_reading().was_turned
 
