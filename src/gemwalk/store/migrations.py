@@ -326,6 +326,48 @@ M009 = Migration(
     """,
 )
 
+M010 = Migration(
+    number=10,
+    name="liquid levels, sumps and what gets pumped out of them",
+    script="""
+    CREATE TABLE sump (
+      label        TEXT PRIMARY KEY,
+      site         TEXT NOT NULL REFERENCES site(label),
+      station      TEXT NOT NULL,
+      kind         TEXT NOT NULL,
+      capacity     REAL NOT NULL,
+      installed_on TEXT NOT NULL,
+      retired_on   TEXT
+    );
+
+    CREATE TABLE level (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      device       TEXT NOT NULL REFERENCES device(label),
+      taken_on     TEXT NOT NULL,
+      depth        REAL NOT NULL,
+      pumped       INTEGER NOT NULL DEFAULT 0,
+      note         TEXT NOT NULL DEFAULT '',
+      UNIQUE (device, taken_on)
+    );
+
+    CREATE TABLE pumpout (
+      id        INTEGER PRIMARY KEY AUTOINCREMENT,
+      sump      TEXT NOT NULL REFERENCES sump(label),
+      at        TEXT NOT NULL,
+      gallons   REAL NOT NULL,
+      hauler    TEXT NOT NULL,
+      bound_for TEXT NOT NULL,
+      note      TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE INDEX sump_by_site ON sump(site);
+    CREATE INDEX level_by_device ON level(device);
+    CREATE INDEX level_by_day ON level(taken_on);
+    CREATE INDEX pumpout_by_sump ON pumpout(sump);
+    CREATE INDEX pumpout_by_at ON pumpout(at);
+    """,
+)
+
 MIGRATIONS: tuple[Migration, ...] = (
     M001,
     M002,
@@ -336,6 +378,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     M007,
     M008,
     M009,
+    M010,
 )
 
 
