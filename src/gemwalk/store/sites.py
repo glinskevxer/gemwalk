@@ -5,8 +5,9 @@ from __future__ import annotations
 from typing import Any, ClassVar
 
 from gemwalk.clock import read_day
-from gemwalk.model.landfill import Area, Cover, Site, read_optional_day
+from gemwalk.model.landfill import Area, Cover, Site
 from gemwalk.store.book import Row
+from gemwalk.store.columns import day_text, flag, read_day_or_none, read_flag
 from gemwalk.store.repo import Repository
 
 
@@ -39,10 +40,10 @@ class SiteRepository(Repository[Site]):
             zone=str(row["zone"]),
             design_capacity=float(row["design_capacity"]),
             opened_on=read_day(str(row["opened_on"])),
-            closed_on=read_optional_day(row["closed_on"]),
-            nitrogen_alternative=bool(row["nitrogen_alternative"]),
-            higher_pressure=bool(row["higher_pressure"]),
-            elected_on=read_optional_day(row["elected_on"]),
+            closed_on=read_day_or_none(row["closed_on"]),
+            nitrogen_alternative=read_flag(row["nitrogen_alternative"]),
+            higher_pressure=read_flag(row["higher_pressure"]),
+            elected_on=read_day_or_none(row["elected_on"]),
         )
 
     def write(self, item: Site) -> dict[str, Any]:
@@ -54,11 +55,11 @@ class SiteRepository(Repository[Site]):
             "permit": item.permit,
             "zone": item.zone,
             "design_capacity": item.design_capacity,
-            "opened_on": item.opened_on.isoformat(),
-            "closed_on": None if item.closed_on is None else item.closed_on.isoformat(),
-            "nitrogen_alternative": int(item.nitrogen_alternative),
-            "higher_pressure": int(item.higher_pressure),
-            "elected_on": None if item.elected_on is None else item.elected_on.isoformat(),
+            "opened_on": day_text(item.opened_on),
+            "closed_on": day_text(item.closed_on),
+            "nitrogen_alternative": flag(item.nitrogen_alternative),
+            "higher_pressure": flag(item.higher_pressure),
+            "elected_on": day_text(item.elected_on),
         }
 
 
@@ -86,8 +87,8 @@ class AreaRepository(Repository[Area]):
             name=str(row["name"]),
             acres=float(row["acres"]),
             first_waste=read_day(str(row["first_waste"])),
-            last_waste=read_optional_day(row["last_waste"]),
-            closed_on=read_optional_day(row["closed_on"]),
+            last_waste=read_day_or_none(row["last_waste"]),
+            closed_on=read_day_or_none(row["closed_on"]),
             cover=Cover(str(row["cover"])),
         )
 
@@ -98,9 +99,9 @@ class AreaRepository(Repository[Area]):
             "site": item.site,
             "name": item.name,
             "acres": item.acres,
-            "first_waste": item.first_waste.isoformat(),
-            "last_waste": None if item.last_waste is None else item.last_waste.isoformat(),
-            "closed_on": None if item.closed_on is None else item.closed_on.isoformat(),
+            "first_waste": day_text(item.first_waste),
+            "last_waste": day_text(item.last_waste),
+            "closed_on": day_text(item.closed_on),
             "cover": item.cover.value,
         }
 

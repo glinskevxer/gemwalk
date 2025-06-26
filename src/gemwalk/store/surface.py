@@ -5,9 +5,10 @@ from __future__ import annotations
 from typing import Any, ClassVar
 
 from gemwalk.clock import Quarter, read_day
-from gemwalk.model.landfill import Cover, read_optional_day
+from gemwalk.model.landfill import Cover
 from gemwalk.model.surface import Hit, Step, Walk
 from gemwalk.store.book import Row
+from gemwalk.store.columns import day_text, read_day_or_none
 from gemwalk.store.repo import Repository
 
 
@@ -38,7 +39,7 @@ class WalkRepository(Repository[Walk]):
             site=str(row["site"]),
             quarter=Quarter.parse(str(row["quarter"])),
             started_on=read_day(str(row["started_on"])),
-            finished_on=read_optional_day(row["finished_on"]),
+            finished_on=read_day_or_none(row["finished_on"]),
             monitor=str(row["monitor"]),
             instrument=str(row["instrument"]),
             background=float(row["background"]),
@@ -54,8 +55,8 @@ class WalkRepository(Repository[Walk]):
             "label": item.label,
             "site": item.site,
             "quarter": str(item.quarter),
-            "started_on": item.started_on.isoformat(),
-            "finished_on": None if item.finished_on is None else item.finished_on.isoformat(),
+            "started_on": day_text(item.started_on),
+            "finished_on": day_text(item.finished_on),
             "monitor": item.monitor,
             "instrument": item.instrument,
             "background": item.background,
@@ -113,9 +114,9 @@ class HitRepository(Repository[Hit]):
             found_on=read_day(str(row["found_on"])),
             step=Step(str(row["stage"])),
             attempt=int(row["attempt"]),
-            repaired_on=read_optional_day(row["repaired_on"]),
-            remonitor_on=read_optional_day(row["remonitor_on"]),
-            closed_on=read_optional_day(row["closed_on"]),
+            repaired_on=read_day_or_none(row["repaired_on"]),
+            remonitor_on=read_day_or_none(row["remonitor_on"]),
+            closed_on=read_day_or_none(row["closed_on"]),
             note=str(row["note"]),
         )
 
@@ -129,12 +130,12 @@ class HitRepository(Repository[Hit]):
             "station": item.station,
             "reading": item.reading,
             "cover": item.cover.value,
-            "found_on": item.found_on.isoformat(),
+            "found_on": day_text(item.found_on),
             "stage": item.step.value,
             "attempt": item.attempt,
-            "repaired_on": None if item.repaired_on is None else item.repaired_on.isoformat(),
-            "remonitor_on": None if item.remonitor_on is None else item.remonitor_on.isoformat(),
-            "closed_on": None if item.closed_on is None else item.closed_on.isoformat(),
+            "repaired_on": day_text(item.repaired_on),
+            "remonitor_on": day_text(item.remonitor_on),
+            "closed_on": day_text(item.closed_on),
             "note": item.note,
         }
 

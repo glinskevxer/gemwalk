@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any, ClassVar
 
 from gemwalk.clock import read_day
-from gemwalk.model.landfill import read_optional_day
 from gemwalk.model.piping import Header, Lateral
 from gemwalk.store.book import Row
+from gemwalk.store.columns import day_text, read_day_or_none
 from gemwalk.store.repo import Repository
 
 
@@ -37,7 +37,7 @@ class HeaderRepository(Repository[Header]):
             material=str(row["material"]),
             length_feet=float(row["length_feet"]),
             installed_on=read_day(str(row["installed_on"])),
-            retired_on=read_optional_day(row["retired_on"]),
+            retired_on=read_day_or_none(row["retired_on"]),
         )
 
     def write(self, item: Header) -> dict[str, Any]:
@@ -49,8 +49,8 @@ class HeaderRepository(Repository[Header]):
             "diameter": item.diameter,
             "material": item.material,
             "length_feet": item.length_feet,
-            "installed_on": item.installed_on.isoformat(),
-            "retired_on": None if item.retired_on is None else item.retired_on.isoformat(),
+            "installed_on": day_text(item.installed_on),
+            "retired_on": day_text(item.retired_on),
         }
 
     def of_site(self, site: str) -> list[Header]:
@@ -88,7 +88,7 @@ class LateralRepository(Repository[Lateral]):
             material=str(row["material"]),
             length_feet=float(row["length_feet"]),
             installed_on=read_day(str(row["installed_on"])),
-            retired_on=read_optional_day(row["retired_on"]),
+            retired_on=read_day_or_none(row["retired_on"]),
         )
 
     def write(self, item: Lateral) -> dict[str, Any]:
@@ -100,8 +100,8 @@ class LateralRepository(Repository[Lateral]):
             "diameter": item.diameter,
             "material": item.material,
             "length_feet": item.length_feet,
-            "installed_on": item.installed_on.isoformat(),
-            "retired_on": None if item.retired_on is None else item.retired_on.isoformat(),
+            "installed_on": day_text(item.installed_on),
+            "retired_on": day_text(item.retired_on),
         }
 
     def of_header(self, header: str) -> list[Lateral]:

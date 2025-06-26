@@ -7,7 +7,7 @@ import datetime as dt
 import pytest
 
 from gemwalk.errors import OrderError, RuleError
-from gemwalk.model.landfill import Area, Cover, Site, read_optional_day
+from gemwalk.model.landfill import Area, Cover, Site
 from gemwalk.rules import WWW, XXX
 
 
@@ -120,12 +120,6 @@ def test_an_area_cannot_close_twice() -> None:
     assert area.cover is Cover.FINAL
     with pytest.raises(RuleError):
         area.close(dt.date(2022, 1, 4))
-
-
-def test_a_blank_sheet_cell_is_no_date() -> None:
-    assert read_optional_day(None) is None
-    assert read_optional_day("   ") is None
-    assert read_optional_day("2021-08-03") == dt.date(2021, 8, 3)
 
 
 def test_a_cover_prints_as_the_word_the_sheet_uses() -> None:

@@ -6,8 +6,8 @@ from typing import Any, ClassVar
 
 from gemwalk.clock import read_day
 from gemwalk.model.device import Device, Kind, State
-from gemwalk.model.landfill import read_optional_day
 from gemwalk.store.book import Row
+from gemwalk.store.columns import day_text, read_day_or_none
 from gemwalk.store.repo import Repository
 
 
@@ -48,11 +48,11 @@ class DeviceRepository(Repository[Device]):
             screen_bottom=float(row["screen_bottom"]),
             state=State(str(row["state"])),
             drilled_on=read_day(str(row["drilled_on"])),
-            connected_on=read_optional_day(row["connected_on"]),
-            offline_since=read_optional_day(row["offline_since"]),
-            abandoned_on=read_optional_day(row["abandoned_on"]),
+            connected_on=read_day_or_none(row["connected_on"]),
+            offline_since=read_day_or_none(row["offline_since"]),
+            abandoned_on=read_day_or_none(row["abandoned_on"]),
             hov_degrees=None if row["hov_degrees"] is None else float(row["hov_degrees"]),
-            hov_approved=read_optional_day(row["hov_approved"]),
+            hov_approved=read_day_or_none(row["hov_approved"]),
             lateral=None if row["lateral"] is None else str(row["lateral"]),
         )
 
@@ -68,12 +68,12 @@ class DeviceRepository(Repository[Device]):
             "screen_top": item.screen_top,
             "screen_bottom": item.screen_bottom,
             "state": item.state.value,
-            "drilled_on": item.drilled_on.isoformat(),
-            "connected_on": _day(item.connected_on),
-            "offline_since": _day(item.offline_since),
-            "abandoned_on": _day(item.abandoned_on),
+            "drilled_on": day_text(item.drilled_on),
+            "connected_on": day_text(item.connected_on),
+            "offline_since": day_text(item.offline_since),
+            "abandoned_on": day_text(item.abandoned_on),
             "hov_degrees": item.hov_degrees,
-            "hov_approved": _day(item.hov_approved),
+            "hov_approved": day_text(item.hov_approved),
             "lateral": item.lateral,
         }
 
@@ -100,10 +100,6 @@ class DeviceRepository(Repository[Device]):
     def unpiped(self, site: str) -> list[Device]:
         """Every device at one site with no lateral to send its gas down."""
         return self.where("site = ? AND lateral IS NULL", (site,))
-
-
-def _day(value: object) -> str | None:
-    return None if value is None else str(value)
 
 
 __all__ = ["DeviceRepository"]

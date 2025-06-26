@@ -14,7 +14,6 @@ import datetime as dt
 from dataclasses import dataclass, replace
 from enum import Enum
 
-from gemwalk.clock import read_day
 from gemwalk.errors import OrderError, RuleError
 from gemwalk.rules import Election, Standard
 
@@ -179,9 +178,4 @@ def _add_years(day: dt.date, years: int) -> dt.date:
         return day.replace(year=day.year + years, day=day.day - 1)
 
 
-def read_optional_day(text: str | None) -> dt.date | None:
-    """Read a date that the sheet may have left blank."""
-    return None if text is None or not text.strip() else read_day(text)
-
-
-__all__ = ["Area", "Cover", "Site", "read_optional_day"]
+__all__ = ["Area", "Cover", "Site"]

@@ -7,9 +7,9 @@ from typing import Any, ClassVar
 
 from gemwalk.clock import read_day
 from gemwalk.model.exceedance import Exceedance, Recheck, Stage
-from gemwalk.model.landfill import read_optional_day
 from gemwalk.rules import Finding
 from gemwalk.store.book import Row
+from gemwalk.store.columns import day_text, flag, read_day_or_none, read_flag
 from gemwalk.store.repo import Repository
 
 
@@ -44,7 +44,7 @@ class ExceedanceRepository(Repository[Exceedance]):
             value=float(row["value"]),
             limit_value=float(row["limit_value"]),
             stage=Stage(str(row["stage"])),
-            closed_on=read_optional_day(row["closed_on"]),
+            closed_on=read_day_or_none(row["closed_on"]),
             note=str(row["note"]),
         )
 
@@ -55,12 +55,12 @@ class ExceedanceRepository(Repository[Exceedance]):
             "site": item.site,
             "device": item.device,
             "kind": item.kind.value,
-            "opened_on": item.opened_on.isoformat(),
+            "opened_on": day_text(item.opened_on),
             "reading": item.reading,
             "value": item.value,
             "limit_value": item.limit_value,
             "stage": item.stage.value,
-            "closed_on": None if item.closed_on is None else item.closed_on.isoformat(),
+            "closed_on": day_text(item.closed_on),
             "note": item.note,
         }
 
@@ -135,7 +135,7 @@ class RecheckRepository(Repository[Recheck]):
             taken_on=read_day(str(row["taken_on"])),
             reading=None if row["reading"] is None else int(row["reading"]),
             value=float(row["value"]),
-            clear=bool(row["clear"]),
+            clear=read_flag(row["clear"]),
             stage=Stage(str(row["stage"])),
             note=str(row["note"]),
         )
@@ -145,10 +145,10 @@ class RecheckRepository(Repository[Recheck]):
         return {
             "id": item.id,
             "exceedance": item.exceedance,
-            "taken_on": item.taken_on.isoformat(),
+            "taken_on": day_text(item.taken_on),
             "reading": item.reading,
             "value": item.value,
-            "clear": int(item.clear),
+            "clear": flag(item.clear),
             "stage": item.stage.value,
             "note": item.note,
         }

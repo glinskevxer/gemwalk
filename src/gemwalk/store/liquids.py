@@ -7,9 +7,9 @@ from dataclasses import replace
 from typing import Any, ClassVar
 
 from gemwalk.clock import read_day
-from gemwalk.model.landfill import read_optional_day
 from gemwalk.model.liquids import Level, Pumpout, Sump, SumpKind
 from gemwalk.store.book import Row
+from gemwalk.store.columns import day_text, flag, moment_text, read_day_or_none, read_flag
 from gemwalk.store.plant import stamp, unstamp
 from gemwalk.store.repo import Repository
 
@@ -38,7 +38,7 @@ class SumpRepository(Repository[Sump]):
             kind=SumpKind(str(row["kind"])),
             capacity=float(row["capacity"]),
             installed_on=read_day(str(row["installed_on"])),
-            retired_on=read_optional_day(row["retired_on"]),
+            retired_on=read_day_or_none(row["retired_on"]),
         )
 
     def write(self, item: Sump) -> dict[str, Any]:
@@ -49,8 +49,8 @@ class SumpRepository(Repository[Sump]):
             "station": item.station,
             "kind": item.kind.value,
             "capacity": item.capacity,
-            "installed_on": item.installed_on.isoformat(),
-            "retired_on": None if item.retired_on is None else item.retired_on.isoformat(),
+            "installed_on": day_text(item.installed_on),
+            "retired_on": day_text(item.retired_on),
         }
 
     def of_site(self, site: str) -> list[Sump]:
@@ -79,7 +79,7 @@ class LevelRepository(Repository[Level]):
             device=str(row["device"]),
             taken_on=read_day(str(row["taken_on"])),
             depth=float(row["depth"]),
-            pumped=bool(row["pumped"]),
+            pumped=read_flag(row["pumped"]),
             note=str(row["note"]),
         )
 
@@ -88,9 +88,9 @@ class LevelRepository(Repository[Level]):
         return {
             "id": item.id,
             "device": item.device,
-            "taken_on": item.taken_on.isoformat(),
+            "taken_on": day_text(item.taken_on),
             "depth": item.depth,
-            "pumped": int(item.pumped),
+            "pumped": flag(item.pumped),
             "note": item.note,
         }
 
@@ -154,7 +154,7 @@ class PumpoutRepository(Repository[Pumpout]):
         return {
             "id": item.id,
             "sump": item.sump,
-            "at": stamp(item.at),
+            "at": moment_text(item.at),
             "gallons": item.gallons,
             "hauler": item.hauler,
             "bound_for": item.bound_for,

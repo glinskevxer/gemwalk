@@ -10,26 +10,32 @@ import datetime as dt
 from dataclasses import replace
 from typing import Any, ClassVar
 
-from gemwalk.clock import UTC, read_day
-from gemwalk.model.landfill import read_optional_day
+from gemwalk.clock import read_day
 from gemwalk.model.plant import Control, ControlKind, Operation, Outage
 from gemwalk.store.book import Row
+from gemwalk.store.columns import (
+    day_text,
+    flag,
+    moment_text,
+    read_day_or_none,
+    read_flag,
+    read_moment_or_none,
+)
 from gemwalk.store.repo import Repository
 
 
 def stamp(moment: dt.datetime) -> str:
     """Write a moment the way the book stores it."""
-    return moment.astimezone(UTC).isoformat(timespec="seconds")
+    written = moment_text(moment)
+    assert written is not None
+    return written
 
 
 def unstamp(text: str) -> dt.datetime:
     """Read a moment back out of the book."""
-    return dt.datetime.fromisoformat(text).astimezone(UTC)
-
-
-def unstamp_or_none(value: object) -> dt.datetime | None:
-    """Read a moment the book may have left blank."""
-    return None if value is None else unstamp(str(value))
+    read = read_moment_or_none(text)
+    assert read is not None
+    return read
 
 
 class ControlRepository(Repository[Control]):
@@ -58,7 +64,7 @@ class ControlRepository(Repository[Control]):
             capacity=float(row["capacity"]),
             minimum_temp=None if row["minimum_temp"] is None else float(row["minimum_temp"]),
             installed_on=read_day(str(row["installed_on"])),
-            retired_on=read_optional_day(row["retired_on"]),
+            retired_on=read_day_or_none(row["retired_on"]),
         )
 
     def write(self, item: Control) -> dict[str, Any]:
@@ -70,8 +76,8 @@ class ControlRepository(Repository[Control]):
             "kind": item.kind.value,
             "capacity": item.capacity,
             "minimum_temp": item.minimum_temp,
-            "installed_on": item.installed_on.isoformat(),
-            "retired_on": None if item.retired_on is None else item.retired_on.isoformat(),
+            "installed_on": day_text(item.installed_on),
+            "retired_on": day_text(item.retired_on),
         }
 
     def of_site(self, site: str) -> list[Control]:
@@ -108,7 +114,7 @@ class OperationRepository(Repository[Operation]):
             id=int(row["id"]),
             control=str(row["control"]),
             at=unstamp(str(row["at"])),
-            running=bool(row["running"]),
+            running=read_flag(row["running"]),
             flow=float(row["flow"]),
             methane=float(row["methane"]),
             temperature=None if row["temperature"] is None else float(row["temperature"]),
@@ -120,8 +126,8 @@ class OperationRepository(Repository[Operation]):
         return {
             "id": item.id,
             "control": item.control,
-            "at": stamp(item.at),
-            "running": int(item.running),
+            "at": moment_text(item.at),
+            "running": flag(item.running),
             "flow": item.flow,
             "methane": item.methane,
             "temperature": item.temperature,
@@ -176,9 +182,9 @@ class OutageRepository(Repository[Outage]):
             control=str(row["control"]),
             site=str(row["site"]),
             started_at=unstamp(str(row["started_at"])),
-            ended_at=unstamp_or_none(row["ended_at"]),
+            ended_at=read_moment_or_none(row["ended_at"]),
             reason=str(row["reason"]),
-            planned=bool(row["planned"]),
+            planned=read_flag(row["planned"]),
             note=str(row["note"]),
         )
 
@@ -188,10 +194,10 @@ class OutageRepository(Repository[Outage]):
             "label": item.label,
             "control": item.control,
             "site": item.site,
-            "started_at": stamp(item.started_at),
-            "ended_at": None if item.ended_at is None else stamp(item.ended_at),
+            "started_at": moment_text(item.started_at),
+            "ended_at": moment_text(item.ended_at),
             "reason": item.reason,
-            "planned": int(item.planned),
+            "planned": flag(item.planned),
             "note": item.note,
         }
 
@@ -219,5 +225,4 @@ __all__ = [
     "OutageRepository",
     "stamp",
     "unstamp",
-    "unstamp_or_none",
 ]

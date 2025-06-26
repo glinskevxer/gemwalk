@@ -11,9 +11,9 @@ from dataclasses import replace
 from typing import Any, ClassVar
 
 from gemwalk.clock import read_day
-from gemwalk.model.landfill import read_optional_day
 from gemwalk.model.reading import Reading, Run
 from gemwalk.store.book import Row
+from gemwalk.store.columns import day_text, read_day_or_none
 from gemwalk.store.repo import Repository
 
 
@@ -38,7 +38,7 @@ class RunRepository(Repository[Run]):
             label=str(row["label"]),
             site=str(row["site"]),
             started_on=read_day(str(row["started_on"])),
-            closed_on=read_optional_day(row["closed_on"]),
+            closed_on=read_day_or_none(row["closed_on"]),
             monitor=str(row["monitor"]),
             meter=str(row["meter"]),
             note=str(row["note"]),
@@ -49,8 +49,8 @@ class RunRepository(Repository[Run]):
         return {
             "label": item.label,
             "site": item.site,
-            "started_on": item.started_on.isoformat(),
-            "closed_on": None if item.closed_on is None else item.closed_on.isoformat(),
+            "started_on": day_text(item.started_on),
+            "closed_on": day_text(item.closed_on),
             "monitor": item.monitor,
             "meter": item.meter,
             "note": item.note,
@@ -121,7 +121,7 @@ class ReadingRepository(Repository[Reading]):
             "id": item.id,
             "run": item.run,
             "device": item.device,
-            "taken_on": item.taken_on.isoformat(),
+            "taken_on": day_text(item.taken_on),
             "methane": item.methane,
             "carbon": item.carbon,
             "oxygen": item.oxygen,
