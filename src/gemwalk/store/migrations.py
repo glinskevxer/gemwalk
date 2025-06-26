@@ -368,6 +368,31 @@ M010 = Migration(
     """,
 )
 
+M011 = Migration(
+    number=11,
+    name="the work orders the field crew is handed",
+    script="""
+    CREATE TABLE work_order (
+      label     TEXT PRIMARY KEY,
+      site      TEXT NOT NULL REFERENCES site(label),
+      kind      TEXT NOT NULL,
+      target    TEXT NOT NULL,
+      because   TEXT,
+      raised_on TEXT NOT NULL,
+      due_on    TEXT NOT NULL,
+      state     TEXT NOT NULL,
+      crew      TEXT NOT NULL DEFAULT '',
+      done_on   TEXT,
+      note      TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE INDEX work_order_by_site ON work_order(site);
+    CREATE INDEX work_order_by_state ON work_order(state);
+    CREATE INDEX work_order_by_target ON work_order(target);
+    CREATE INDEX work_order_by_because ON work_order(because);
+    """,
+)
+
 MIGRATIONS: tuple[Migration, ...] = (
     M001,
     M002,
@@ -379,6 +404,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     M008,
     M009,
     M010,
+    M011,
 )
 
 
