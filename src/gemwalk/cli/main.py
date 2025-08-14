@@ -7,14 +7,15 @@ import sys
 import click
 
 from gemwalk import __version__
-from gemwalk.cli.support import Ledger, line, pass_ledger, rows
+from gemwalk.cli.landfill import site
+from gemwalk.cli.support import DeskGroup, Ledger, line, pass_ledger, rows
 from gemwalk.errors import GemwalkError
 from gemwalk.store.migrations import MIGRATIONS, pending, version
 
 DEFAULT_BOOK = "gemwalk.sqlite3"
 
 
-@click.group(context_settings={"help_option_names": ["-h", "--help"]})
+@click.group(cls=DeskGroup, context_settings={"help_option_names": ["-h", "--help"]})
 @click.option(
     "--book",
     default=DEFAULT_BOOK,
@@ -70,6 +71,9 @@ def about() -> None:
     line(f"gemwalk {__version__}")
     line("landfill gas collection and control system field desk")
     line("wellfield monitoring, exceedance clocks, surface walkovers, the blower station")
+
+
+main.add_command(site)
 
 
 def run() -> int:

@@ -8,7 +8,7 @@ no traceback here. Nothing in the command modules catches anything.
 from __future__ import annotations
 
 import datetime as dt
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -93,6 +93,23 @@ class Ledger:
             self._office = None
 
 
+class DeskGroup(click.Group):
+    """A command group that turns the package's refusals into messages.
+
+    Every command under it can let a :class:`~gemwalk.errors.GemwalkError` out,
+    and it arrives here as an ordinary click failure with no traceback. Putting
+    it on the top level group is enough, because a subgroup is invoked through
+    it.
+    """
+
+    def invoke(self, ctx: click.Context) -> Any:
+        """Run the command and turn a refusal into a message."""
+        try:
+            return super().invoke(ctx)
+        except GemwalkError as failure:
+            raise refuse(failure) from None
+
+
 pass_ledger = click.make_pass_decorator(Ledger)
 
 
@@ -106,7 +123,7 @@ def line(text: str) -> None:
     click.echo(text)
 
 
-def rows(headings: tuple[str, ...], body: list[tuple[str, ...]]) -> None:
+def rows(headings: tuple[str, ...], body: Sequence[Sequence[str]]) -> None:
     """Print a small table without building a whole report for it."""
     widths = [len(head) for head in headings]
     for row in body:
