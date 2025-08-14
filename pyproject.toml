@@ -18,6 +18,9 @@ dev = [
   "mypy==1.14.1",
 ]
 
+[project.scripts]
+gemwalk = "gemwalk.cli.main:run"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/gemwalk"]
 
