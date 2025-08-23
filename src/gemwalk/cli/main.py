@@ -9,6 +9,7 @@ import click
 from gemwalk import __version__
 from gemwalk.cli.landfill import site
 from gemwalk.cli.support import DeskGroup, Ledger, line, pass_ledger, rows
+from gemwalk.cli.wellfield import pipe, well
 from gemwalk.errors import GemwalkError
 from gemwalk.store.migrations import MIGRATIONS, pending, version
 
@@ -74,6 +75,8 @@ def about() -> None:
 
 
 main.add_command(site)
+main.add_command(well)
+main.add_command(pipe)
 
 
 def run() -> int:
