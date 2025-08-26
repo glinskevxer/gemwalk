@@ -135,3 +135,53 @@ def open_site(made: Shell, label: str = "NORTHRIDGE", subpart: str = "XXX") -> N
         "--first-waste",
         "2020-06-01",
     )
+
+
+CLEAN = (
+    "--methane",
+    "52.4",
+    "--carbon",
+    "38.1",
+    "--oxygen",
+    "0.6",
+    "--balance",
+    "8.9",
+    "--temp",
+    "118.2",
+    "--static",
+    "-1.4",
+    "--applied",
+    "-12.0",
+    "--flow",
+    "42.0",
+    "--valve-before",
+    "3.0",
+    "--valve-after",
+    "3.0",
+)
+
+
+def walk(made: Shell, on: str, hot: str | None = None, **fields: str) -> str:
+    """Open a run, read every wellhead, and close it."""
+    out = made.ok(
+        "run",
+        "open",
+        "NORTHRIDGE",
+        "--on",
+        on,
+        "--monitor",
+        "D. Kasprzak",
+        "--meter",
+        "GEM5000-40912",
+    )
+    label = out.split()[0]
+    for index in range(4):
+        device = f"VW-00{index + 1}"
+        args = list(CLEAN)
+        if device == hot:
+            for name, value in fields.items():
+                flag = "--" + name.replace("_", "-")
+                args[args.index(flag) + 1] = value
+        made.ok("run", "read", label, device, "--on", on, *args)
+    made.ok("run", "close", label, "--on", on)
+    return label
