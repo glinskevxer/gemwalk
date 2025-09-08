@@ -9,6 +9,7 @@ import click
 from gemwalk import __version__
 from gemwalk.cli.landfill import site
 from gemwalk.cli.monitoring import run as run_group
+from gemwalk.cli.records import record, work
 from gemwalk.cli.support import DeskGroup, Ledger, line, pass_ledger, rows
 from gemwalk.cli.wellfield import pipe, well
 from gemwalk.errors import GemwalkError
@@ -79,6 +80,8 @@ main.add_command(site)
 main.add_command(well)
 main.add_command(pipe)
 main.add_command(run_group)
+main.add_command(record)
+main.add_command(work)
 
 
 def run() -> int:
