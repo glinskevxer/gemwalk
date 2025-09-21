@@ -6,7 +6,7 @@ import datetime as dt
 
 import pytest
 
-from gemwalk.clock import read_moment
+from gemwalk.clock import read_moment, show_moment
 from gemwalk.errors import RuleError, StateError
 from gemwalk.model.plant import ControlKind
 from gemwalk.service.plant import PlantDesk
@@ -42,7 +42,11 @@ def desk(book: Book) -> PlantDesk:
 
 
 def at(text: str) -> dt.datetime:
-    return read_moment(text, "UTC")
+    return read_moment(text, ZONE)
+
+
+def clock(moment: dt.datetime) -> str:
+    return show_moment(moment, ZONE)[-5:]
 
 
 def log(
@@ -126,7 +130,7 @@ def test_the_blocks_are_pinned_to_the_clock_and_not_to_the_first_reading(
     log(desk, "2025-06-11 08:40", 1_500.0)
     log(desk, "2025-06-11 09:10", 1_500.0)
     blocks = desk.blocks("CD-01", at("2025-06-11 08:40"), at("2025-06-11 12:00"))
-    assert [b.start.hour for b in blocks] == [6, 9]
+    assert [clock(b.start) for b in blocks] == ["06:00", "09:00"]
     assert [b.readings for b in blocks] == [1, 1]
 
 

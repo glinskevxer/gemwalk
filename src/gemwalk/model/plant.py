@@ -18,6 +18,7 @@ from __future__ import annotations
 import datetime as dt
 from dataclasses import dataclass, replace
 from enum import Enum
+from zoneinfo import ZoneInfo
 
 from gemwalk.clock import elapsed, hours_between
 from gemwalk.errors import OrderError, RuleError, StateError
@@ -180,16 +181,22 @@ class Outage:
         return replace(self, ended_at=at, note=note or self.note)
 
 
-def block_start(at: dt.datetime, zone_offset: dt.timedelta | None = None) -> dt.datetime:
+def block_start(at: dt.datetime, zone: str = "UTC") -> dt.datetime:
     """The start of the fixed three hour block a moment falls in.
 
     The blocks are pinned to the clock and not to the reading, so the first
     reading after an outage lands part way into a block that has already begun.
+
+    The clock they are pinned to is the **site's**, not utc. Flooring a utc
+    moment instead puts the boundaries at seven, ten and one in the afternoon
+    on a site five hours behind, which splits an ordinary morning across two
+    blocks and averages the wrong readings together. It was wrong here until
+    the command line was wired up and a site with a real zone ran through it.
     """
-    local = at if zone_offset is None else at + zone_offset
+    local = at.astimezone(ZoneInfo(zone))
     hour = (local.hour // BLOCK_HOURS) * BLOCK_HOURS
     floor = local.replace(hour=hour, minute=0, second=0, microsecond=0)
-    return floor if zone_offset is None else floor - zone_offset
+    return floor.astimezone(dt.UTC)
 
 
 __all__ = [

@@ -37,29 +37,7 @@ class DayType(click.ParamType):
             self.fail(f"{value!r} is not a date, write it as 2025-04-08", param, ctx)
 
 
-class MomentType(click.ParamType):
-    """A wall time on the command line, read in the site's own zone."""
-
-    name = "moment"
-
-    def __init__(self, zone: str = "UTC") -> None:
-        self.zone = zone
-
-    def convert(self, value: Any, param: Any, ctx: Any) -> dt.datetime:
-        """Read the argument as a moment, or fail the way click expects."""
-        if isinstance(value, dt.datetime):
-            return value
-        zone = self.zone
-        if ctx is not None and isinstance(ctx.obj, Ledger) and ctx.obj.zone:
-            zone = ctx.obj.zone
-        try:
-            return read_moment(str(value), zone)
-        except UnitError:
-            self.fail(f"{value!r} is not a moment, write it as '2025-04-08 06:30'", param, ctx)
-
-
 DAY = DayType()
-MOMENT = MomentType()
 
 
 class Ledger:
@@ -113,6 +91,21 @@ class DeskGroup(click.Group):
 pass_ledger = click.make_pass_decorator(Ledger)
 
 
+def moment_at(ledger: Ledger, site: str, text: str) -> dt.datetime:
+    """Read a wall time in the site's own zone.
+
+    A moment cannot be a click parameter type, because click reads the options
+    before the command body runs and the zone is not known until the site has
+    been looked up. So the moment arrives as text and is read here.
+    """
+    try:
+        return read_moment(text, ledger.use_zone(site))
+    except UnitError:
+        raise click.BadParameter(
+            f"{text!r} is not a moment, write it as '2025-04-08 06:30'"
+        ) from None
+
+
 def show(report: Report) -> None:
     """Print a report."""
     click.echo(report.render(), nl=False)
@@ -142,11 +135,11 @@ def refuse(failure: GemwalkError) -> click.ClickException:
 
 __all__ = [
     "DAY",
-    "MOMENT",
     "DayType",
+    "DeskGroup",
     "Ledger",
-    "MomentType",
     "line",
+    "moment_at",
     "pass_ledger",
     "refuse",
     "rows",

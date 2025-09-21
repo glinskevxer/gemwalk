@@ -10,6 +10,7 @@ from gemwalk import __version__
 from gemwalk.cli.cover import cover
 from gemwalk.cli.landfill import site
 from gemwalk.cli.monitoring import run as run_group
+from gemwalk.cli.plant import plant, water
 from gemwalk.cli.records import record, work
 from gemwalk.cli.support import DeskGroup, Ledger, line, pass_ledger, rows
 from gemwalk.cli.wellfield import pipe, well
@@ -84,6 +85,8 @@ main.add_command(run_group)
 main.add_command(record)
 main.add_command(work)
 main.add_command(cover)
+main.add_command(plant)
+main.add_command(water)
 
 
 def run() -> int:

@@ -127,9 +127,14 @@ class PlantDesk:
             return self.operations.add(record)
 
     def blocks(self, control: str, first: dt.datetime, last: dt.datetime) -> list[Block]:
-        """Every fixed block touching a range, with its average."""
+        """Every fixed block touching a range, with its average.
+
+        The blocks are cut on the site's own wall clock, so a morning at a site
+        five hours behind utc is one block and not two halves of two.
+        """
         found = self.controls.get(control)
-        start = block_start(first.astimezone(UTC))
+        zone = self.sites.zone_of(found.site)
+        start = block_start(first.astimezone(UTC), zone)
         made: list[Block] = []
         while start < last:
             end = start + dt.timedelta(hours=BLOCK_HOURS)
