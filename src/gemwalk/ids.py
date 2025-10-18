@@ -21,6 +21,7 @@ from enum import Enum
 from gemwalk.clock import Month, Quarter
 from gemwalk.errors import UnknownError
 from gemwalk.store.book import Book
+from gemwalk.store.labels import LabelRepository
 
 
 class Scope(Enum):
@@ -85,6 +86,7 @@ class Labels:
 
     def __init__(self, book: Book) -> None:
         self.book = book
+        self.rows = LabelRepository(book)
 
     def series(self, kind: str) -> Series:
         """The counter that labels this kind of thing."""
@@ -96,45 +98,25 @@ class Labels:
     def next(self, kind: str, on: dt.date) -> str:
         """Hand out the next label of this kind for the bucket *on* falls in."""
         series = self.series(kind)
-        scope = series.scope.key(on)
-        with self.book.writing():
-            row = self.book.one(
-                "SELECT last FROM label_run WHERE kind = ? AND scope = ?", (kind, scope)
-            )
-            number = 1 if row is None else int(row["last"]) + 1
-            if row is None:
-                self.book.execute(
-                    "INSERT INTO label_run (kind, scope, last) VALUES (?, ?, ?)",
-                    (kind, scope, number),
-                )
-            else:
-                self.book.execute(
-                    "UPDATE label_run SET last = ? WHERE kind = ? AND scope = ?",
-                    (number, kind, scope),
-                )
-        return series.format(number, on)
+        return series.format(self.rows.take(kind, series.scope.key(on)), on)
 
     def peek(self, kind: str, on: dt.date) -> int:
         """How many labels of this kind the bucket has already handed out."""
         series = self.series(kind)
-        row = self.book.one(
-            "SELECT last FROM label_run WHERE kind = ? AND scope = ?",
-            (kind, series.scope.key(on)),
-        )
-        return 0 if row is None else int(row["last"])
+        return self.rows.last(kind, series.scope.key(on))
 
     def reserve(self, kind: str, on: dt.date, upto: int) -> None:
         """Push a counter forward, for a book seeded from paper records."""
         series = self.series(kind)
         scope = series.scope.key(on)
         with self.book.writing():
-            if self.peek(kind, on) >= upto:
-                return
-            self.book.execute(
-                "INSERT INTO label_run (kind, scope, last) VALUES (?, ?, ?) "
-                "ON CONFLICT (kind, scope) DO UPDATE SET last = excluded.last",
-                (kind, scope, upto),
-            )
+            if self.rows.last(kind, scope) < upto:
+                self.rows.set(kind, scope, upto)
+
+    def buckets(self, kind: str) -> list[tuple[str, int]]:
+        """Every bucket one kind has handed numbers out of."""
+        self.series(kind)
+        return self.rows.buckets(kind)
 
     def kinds(self) -> list[str]:
         """Every kind of thing the book hands labels out for."""

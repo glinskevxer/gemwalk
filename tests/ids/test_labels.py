@@ -95,3 +95,19 @@ def test_a_scope_key_says_which_bucket_a_day_is_in() -> None:
     assert Scope.YEAR.key(APRIL) == "2025"
     assert Scope.QUARTER.key(APRIL) == "2025Q2"
     assert Scope.MONTH.key(APRIL) == "2025-04"
+
+
+def test_the_counters_say_which_buckets_they_have_used(labels: Labels) -> None:
+    labels.next("run", APRIL)
+    labels.next("run", MAY)
+    labels.next("run", MAY)
+    assert labels.buckets("run") == [("2025-04", 1), ("2025-05", 2)]
+
+
+def test_a_kind_that_has_handed_nothing_out_has_no_buckets(labels: Labels) -> None:
+    assert labels.buckets("device") == []
+
+
+def test_a_kind_nobody_labels_has_no_buckets_either(labels: Labels) -> None:
+    with pytest.raises(UnknownError):
+        labels.buckets("badger")
