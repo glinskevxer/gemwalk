@@ -71,7 +71,7 @@ class PlantDesk:
         kind: ControlKind,
         capacity: float,
         on: dt.date,
-        minimum_temp: float | None = None,
+        floor_degrees: float | None = None,
     ) -> Control:
         """Put a control device on the system."""
         self.sites.sites.get(site)
@@ -82,7 +82,7 @@ class PlantDesk:
             kind=kind,
             capacity=capacity,
             installed_on=on,
-            minimum_temp=minimum_temp,
+            floor_degrees=floor_degrees,
         )
         with self.book.writing():
             return self.controls.add(control)
@@ -149,7 +149,7 @@ class PlantDesk:
                     readings=len(inside),
                     running=sum(1 for o in inside if o.running),
                     average=average,
-                    floor=found.minimum_temp,
+                    floor=found.floor_degrees,
                 )
             )
             start = end

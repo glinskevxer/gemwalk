@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from gemwalk.errors import DesignError
 from gemwalk.report.frame import (
     Align,
     Column,
@@ -60,7 +61,7 @@ def test_a_column_widens_to_what_is_actually_in_it() -> None:
 
 
 def test_a_row_of_the_wrong_length_is_refused() -> None:
-    with pytest.raises(ValueError, match="cells for"):
+    with pytest.raises(DesignError, match="cells for"):
         a_table().add("VW-041")
 
 

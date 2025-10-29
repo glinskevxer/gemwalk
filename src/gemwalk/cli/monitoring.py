@@ -36,7 +36,13 @@ def run_open(ledger: Ledger, site: str, on: dt.date, monitor: str, meter: str) -
 @click.option("--carbon", type=float, required=True, help="carbon dioxide percent by volume")
 @click.option("--oxygen", type=float, required=True, help="oxygen percent by volume")
 @click.option("--balance", type=float, required=True, help="balance percent, which is nitrogen")
-@click.option("--temp", type=float, required=True, help="wellhead temperature in Fahrenheit")
+@click.option(
+    "--temp",
+    "temperature",
+    type=float,
+    required=True,
+    help="wellhead temperature in Fahrenheit",
+)
 @click.option("--static", type=float, required=True, help="gauge pressure in inches of water")
 @click.option("--applied", type=float, required=True, help="applied vacuum in inches of water")
 @click.option("--flow", type=float, required=True, help="flow in standard cubic feet a minute")
@@ -53,7 +59,7 @@ def run_read(
     carbon: float,
     oxygen: float,
     balance: float,
-    temp: float,
+    temperature: float,
     static: float,
     applied: float,
     flow: float,
@@ -70,7 +76,7 @@ def run_read(
         carbon=carbon,
         oxygen=oxygen,
         balance=balance,
-        temperature=temp,
+        temperature=temperature,
         static=static,
         applied=applied,
         flow=flow,

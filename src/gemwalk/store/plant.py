@@ -62,7 +62,7 @@ class ControlRepository(Repository[Control]):
             name=str(row["name"]),
             kind=ControlKind(str(row["kind"])),
             capacity=float(row["capacity"]),
-            minimum_temp=None if row["minimum_temp"] is None else float(row["minimum_temp"]),
+            floor_degrees=None if row["minimum_temp"] is None else float(row["minimum_temp"]),
             installed_on=read_day(str(row["installed_on"])),
             retired_on=read_day_or_none(row["retired_on"]),
         )
@@ -75,7 +75,7 @@ class ControlRepository(Repository[Control]):
             "name": item.name,
             "kind": item.kind.value,
             "capacity": item.capacity,
-            "minimum_temp": item.minimum_temp,
+            "minimum_temp": item.floor_degrees,
             "installed_on": day_text(item.installed_on),
             "retired_on": day_text(item.retired_on),
         }

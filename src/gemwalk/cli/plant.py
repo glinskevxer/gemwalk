@@ -49,7 +49,7 @@ def plant_install(
         kind=ControlKind[kind.upper()],
         capacity=capacity,
         on=on,
-        minimum_temp=floor,
+        floor_degrees=floor,
     )
     held = f", held at or above {made.floor}" if made.floor is not None else ""
     line(f"{made.label} in service as a {made.kind}{held}")
@@ -61,7 +61,13 @@ def plant_install(
 @click.option("--running/--down", default=True, help="was the device burning gas")
 @click.option("--flow", type=float, required=True, help="inlet flow in scfm")
 @click.option("--methane", type=float, required=True, help="inlet methane percent")
-@click.option("--temp", type=float, default=None, help="chamber temperature in Fahrenheit")
+@click.option(
+    "--temp",
+    "temperature",
+    type=float,
+    default=None,
+    help="chamber temperature in Fahrenheit",
+)
 @click.option("--note", default="", help="anything the operator wrote down")
 @pass_ledger
 def plant_log(
@@ -71,7 +77,7 @@ def plant_log(
     running: bool,
     flow: float,
     methane: float,
-    temp: float | None,
+    temperature: float | None,
     note: str,
 ) -> None:
     """Write one line of a device's operating record."""
@@ -83,7 +89,7 @@ def plant_log(
         running=running,
         flow=flow,
         methane=methane,
-        temperature=temp,
+        temperature=temperature,
         note=note,
     )
     line(f"{label} logged, {record.methane_flow:.1f} scfm of methane")

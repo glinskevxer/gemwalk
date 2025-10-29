@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from gemwalk.errors import UnknownError
+from gemwalk.errors import DesignError, UnknownError
 from gemwalk.rules import CF, STANDARDS, WWW, XXX, Finding, Windows, codes, standard
 from gemwalk.units import Percent
 
@@ -52,7 +52,7 @@ def test_the_three_windows_widen_in_the_order_they_are_walked() -> None:
 
 
 def test_windows_that_do_not_widen_are_refused() -> None:
-    with pytest.raises(ValueError, match="widen"):
+    with pytest.raises(DesignError, match="widen"):
         Windows(correct=15, action=5, expand=120)
 
 

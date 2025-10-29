@@ -109,7 +109,7 @@ def build(office: Office) -> None:
         kind=ControlKind.ENCLOSED_FLARE,
         capacity=2_400.0,
         on=dt.date(2016, 4, 1),
-        minimum_temp=1_400.0,
+        floor_degrees=1_400.0,
     )
     office.liquids.add_sump(
         SITE,

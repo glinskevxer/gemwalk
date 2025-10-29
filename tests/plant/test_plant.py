@@ -22,7 +22,7 @@ def a_control(**changes: object) -> Control:
         "kind": ControlKind.ENCLOSED_FLARE,
         "capacity": 2_400.0,
         "installed_on": INSTALLED,
-        "minimum_temp": 1_400.0,
+        "floor_degrees": 1_400.0,
     }
     fields.update(changes)
     return Control(**fields)  # type: ignore[arg-type]
@@ -63,11 +63,11 @@ def test_an_enclosed_flare_has_a_chamber_and_a_floor() -> None:
 
 def test_an_enclosed_flare_without_a_floor_is_refused() -> None:
     with pytest.raises(RuleError, match="minimum chamber"):
-        a_control(minimum_temp=None)
+        a_control(floor_degrees=None)
 
 
 def test_a_candlestick_has_no_chamber_to_measure() -> None:
-    control = a_control(kind=ControlKind.CANDLESTICK, minimum_temp=None)
+    control = a_control(kind=ControlKind.CANDLESTICK, floor_degrees=None)
     assert not control.kind.has_chamber
     assert control.floor is None
     with pytest.raises(RuleError, match="no chamber"):
@@ -75,7 +75,7 @@ def test_a_candlestick_has_no_chamber_to_measure() -> None:
 
 
 def test_an_engine_has_no_chamber_either() -> None:
-    control = a_control(kind=ControlKind.ENGINE, minimum_temp=None)
+    control = a_control(kind=ControlKind.ENGINE, floor_degrees=None)
     assert not control.kind.has_chamber
 
 

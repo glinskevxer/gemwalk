@@ -229,7 +229,7 @@ def _plant_section(office: Office, report: Report, site: str, quarter: Quarter) 
             control.label,
             str(control.kind),
             number(control.capacity, 0),
-            None if control.minimum_temp is None else number(control.minimum_temp, 0),
+            None if control.floor_degrees is None else number(control.floor_degrees, 0),
         )
     section.table(table)
     long = office.plant.long_outages(

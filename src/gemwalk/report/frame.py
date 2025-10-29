@@ -16,6 +16,8 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 
+from gemwalk.errors import DesignError
+
 RULE = "-"
 GAP = "  "
 
@@ -58,8 +60,9 @@ class Table:
     def add(self, *cells: object) -> Table:
         """Put one row on the table."""
         if len(cells) != len(self.columns):
-            raise ValueError(
-                f"{len(cells)} cells for {len(self.columns)} columns in {self.title or 'a table'}"
+            raise DesignError(
+                self.title or "a table",
+                f"{len(cells)} cells for {len(self.columns)} columns",
             )
         self.rows.append(cells)
         return self

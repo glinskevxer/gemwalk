@@ -47,7 +47,7 @@ def a_control(label: str = "CD-01", **changes: object) -> Control:
         "kind": ControlKind.ENCLOSED_FLARE,
         "capacity": 2_400.0,
         "installed_on": dt.date(2016, 4, 1),
-        "minimum_temp": 1_400.0,
+        "floor_degrees": 1_400.0,
     }
     fields.update(changes)
     return Control(**fields)  # type: ignore[arg-type]
@@ -82,7 +82,7 @@ def test_a_candlestick_with_no_floor_round_trips(
     store: tuple[ControlRepository, OperationRepository, OutageRepository],
 ) -> None:
     controls, _, _ = store
-    stick = a_control("CD-02", kind=ControlKind.CANDLESTICK, minimum_temp=None)
+    stick = a_control("CD-02", kind=ControlKind.CANDLESTICK, floor_degrees=None)
     controls.add(stick)
     assert controls.get("CD-02") == stick
     assert len(controls.live("NORTHRIDGE")) == 2

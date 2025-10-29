@@ -71,6 +71,20 @@ class OrderError(GemwalkError):
         self.later = later
 
 
+class DesignError(GemwalkError):
+    """Something the package itself is built out of is put together wrongly.
+
+    This is not a refusal aimed at a person filling in a field sheet. It is a
+    programming mistake caught at the point it is made, and the message is for
+    whoever wrote the line.
+    """
+
+    def __init__(self, what: str, why: str) -> None:
+        super().__init__(f"{what}: {why}")
+        self.what = what
+        self.why = why
+
+
 class RuleError(GemwalkError):
     """The regulation does not allow what was asked."""
 

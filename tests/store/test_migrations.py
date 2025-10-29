@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from gemwalk.errors import StateError
+from gemwalk.errors import DesignError, StateError
 from gemwalk.store.book import Book
 from gemwalk.store.migrations import (
     MIGRATIONS,
@@ -76,9 +76,9 @@ def test_migration_numbers_have_no_gaps() -> None:
 
 
 def test_a_migration_needs_a_number_and_a_script() -> None:
-    with pytest.raises(ValueError, match="numbered from one"):
+    with pytest.raises(DesignError, match="numbered from one"):
         Migration(0, "nothing", "SELECT 1;")
-    with pytest.raises(ValueError, match="no script"):
+    with pytest.raises(DesignError, match="no script"):
         Migration(1, "nothing", "   ")
 
 

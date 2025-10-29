@@ -54,15 +54,15 @@ class Control:
     kind: ControlKind
     capacity: float
     installed_on: dt.date
-    minimum_temp: float | None = None
+    floor_degrees: float | None = None
     retired_on: dt.date | None = None
 
     def __post_init__(self) -> None:
         if self.capacity <= 0:
             raise RuleError("control", "a control device has a capacity")
-        if self.kind.has_chamber and self.minimum_temp is None:
+        if self.kind.has_chamber and self.floor_degrees is None:
             raise RuleError("control", f"a {self.kind} has a minimum chamber temperature")
-        if not self.kind.has_chamber and self.minimum_temp is not None:
+        if not self.kind.has_chamber and self.floor_degrees is not None:
             raise RuleError("control", f"a {self.kind} has no chamber to measure")
         if self.retired_on is not None and self.retired_on < self.installed_on:
             raise OrderError("control", str(self.installed_on), str(self.retired_on))
@@ -80,7 +80,7 @@ class Control:
     @property
     def floor(self) -> Temperature | None:
         """The minimum chamber temperature, where there is a chamber."""
-        return None if self.minimum_temp is None else Temperature(self.minimum_temp)
+        return None if self.floor_degrees is None else Temperature(self.floor_degrees)
 
     def retire(self, on: dt.date) -> Control:
         """Take the device off the system."""

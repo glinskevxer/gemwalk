@@ -14,7 +14,7 @@ from __future__ import annotations
 import datetime as dt
 from dataclasses import dataclass
 
-from gemwalk.errors import StateError
+from gemwalk.errors import DesignError, StateError
 from gemwalk.store.book import Book
 
 LOG_TABLE = """
@@ -36,9 +36,9 @@ class Migration:
 
     def __post_init__(self) -> None:
         if self.number < 1:
-            raise ValueError("migrations are numbered from one")
+            raise DesignError("migration", "migrations are numbered from one")
         if not self.script.strip():
-            raise ValueError(f"migration {self.number} has no script")
+            raise DesignError("migration", f"migration {self.number} has no script")
 
 
 M001 = Migration(

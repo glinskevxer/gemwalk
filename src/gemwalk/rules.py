@@ -18,7 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
-from gemwalk.errors import UnknownError
+from gemwalk.errors import DesignError, UnknownError
 from gemwalk.units import Percent, Ppmv, Pressure, Temperature
 
 
@@ -64,7 +64,7 @@ class Windows:
 
     def __post_init__(self) -> None:
         if not self.correct < self.action < self.expand:
-            raise ValueError("the three windows have to widen")
+            raise DesignError("windows", "the three windows have to widen")
 
 
 @dataclass(frozen=True)

@@ -86,7 +86,7 @@ def furnish(office: Office, *, wells: int = 4, subpart: str = "XXX") -> Office:
         kind=ControlKind.ENCLOSED_FLARE,
         capacity=2_400.0,
         on=dt.date(2016, 4, 1),
-        minimum_temp=1_400.0,
+        floor_degrees=1_400.0,
     )
     office.liquids.add_sump(
         SITE, "HD-01 low point", kind=SumpKind.KNOCKOUT, capacity=550.0, on=dt.date(2019, 9, 3)
