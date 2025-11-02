@@ -47,13 +47,20 @@ class Module:
         return parts[1] if len(parts) > 1 else ""
 
     def imports(self) -> list[str]:
-        """Every module name this one imports, dotted and absolute."""
+        """Every module name this one imports, dotted and absolute.
+
+        ``from gemwalk.tools import check_sql`` names two things: the package
+        the name came out of and, if the name happens to be a module, that
+        module. Both are recorded, because a check that asks whether anybody
+        imports a module has to see the second one.
+        """
         found: list[str] = []
         for node in ast.walk(self.tree):
             if isinstance(node, ast.Import):
                 found.extend(alias.name for alias in node.names)
             elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
                 found.append(node.module)
+                found.extend(f"{node.module}.{alias.name}" for alias in node.names)
         return found
 
 

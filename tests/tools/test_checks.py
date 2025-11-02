@@ -44,7 +44,12 @@ def test_a_module_knows_which_part_of_the_package_it_is_in() -> None:
 
 def test_a_module_lists_what_it_imports() -> None:
     module = a_module("import os\nfrom gemwalk.units import Percent\nfrom . import x\n")
-    assert module.imports() == ["os", "gemwalk.units"]
+    assert module.imports() == ["os", "gemwalk.units", "gemwalk.units.Percent"]
+
+
+def test_importing_a_module_by_name_names_the_module() -> None:
+    module = a_module("from gemwalk.tools import check_sql\n")
+    assert "gemwalk.tools.check_sql" in module.imports()
 
 
 def test_reporting_nothing_is_a_pass(capsys: pytest.CaptureFixture[str]) -> None:
