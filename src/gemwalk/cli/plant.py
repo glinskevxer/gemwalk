@@ -55,6 +55,16 @@ def plant_install(
     line(f"{made.label} in service as a {made.kind}{held}")
 
 
+@plant.command("retire")
+@click.argument("label")
+@click.option("--on", type=DAY, required=True, help="the day it came off the system")
+@pass_ledger
+def plant_retire(ledger: Ledger, label: str, on: dt.date) -> None:
+    """Take a control device off the system."""
+    control = ledger.office.plant.retire(label, on)
+    line(f"{control.label} off the system on {control.retired_on}")
+
+
 @plant.command("log")
 @click.argument("label")
 @click.argument("at")
@@ -118,6 +128,23 @@ def plant_blocks(ledger: Ledger, label: str, first: str, last: str) -> None:
             )
         )
     rows(("block", "records", "running", "average", ""), body)
+
+
+@plant.command("summary")
+@click.argument("label")
+@click.option("--from", "first", required=True, help="the first moment")
+@click.option("--to", "last", required=True, help="the last moment")
+@pass_ledger
+def plant_summary(ledger: Ledger, label: str, first: str, last: str) -> None:
+    """Say how much a device ran, how much it took, and how long it was down."""
+    desk = ledger.office.plant
+    control = desk.controls.get(label)
+    start = moment_at(ledger, control.site, first)
+    end = moment_at(ledger, control.site, last)
+    line(f"{control.label}  {control.name}  {control.kind}")
+    line(f"  running on {desk.availability(label, start, end) * 100:.0f}% of the records")
+    line(f"  {desk.throughput(label, start, end):,.1f} scfm of methane while running")
+    line(f"  {desk.downtime_hours(label, start, end):,.1f} hours down in the range")
 
 
 @plant.command("down")
@@ -236,6 +263,16 @@ def water_sump(
         site, station, kind=SumpKind[kind.upper()], capacity=capacity, on=on
     )
     line(f"{made.label} in at {made.station}, {made.capacity:g} gallons")
+
+
+@water.command("retire-sump")
+@click.argument("label")
+@click.option("--on", type=DAY, required=True, help="the day it came off the tree")
+@pass_ledger
+def water_retire_sump(ledger: Ledger, label: str, on: dt.date) -> None:
+    """Take a condensate catcher off the pipe tree."""
+    sump = ledger.office.liquids.retire_sump(label, on)
+    line(f"{sump.label} off the tree on {sump.retired_on}")
 
 
 @water.command("pump")

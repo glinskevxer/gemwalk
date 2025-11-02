@@ -174,6 +174,33 @@ def well_board(ledger: Ledger, site: str, on: dt.date) -> None:
         line("no lateral: " + ", ".join(d.label for d in unpiped))
 
 
+@well.command("offline")
+@click.argument("site")
+@click.option("--on", type=DAY, required=True, help="the day to measure against")
+@pass_ledger
+def well_offline(ledger: Ledger, site: str, on: dt.date) -> None:
+    """List the devices that are off the run and how long they have been."""
+    desk = ledger.office.wellfield
+    off = desk.offline(site)
+    if not off:
+        line("nothing is off the run")
+        return
+    subpart = ledger.office.sites.standard_of(site)
+    rows(
+        ("device", "since", "days", "window", ""),
+        [
+            (
+                d.label,
+                str(d.offline_since),
+                str(d.offline_days(on)),
+                str(subpart.raising_days),
+                "too long" if d.offline_too_long(subpart, on) else "",
+            )
+            for d in off
+        ],
+    )
+
+
 @click.group()
 def pipe() -> None:
     """The headers and laterals between the wellheads and the blower."""
@@ -249,6 +276,33 @@ def pipe_pull(ledger: Ledger, label: str, on: dt.date) -> None:
     else:
         desk.retire_header(label, on)
     line(f"{label} pulled on {on}")
+
+
+@pipe.command("show")
+@click.argument("label")
+@pass_ledger
+def pipe_show(ledger: Ledger, label: str) -> None:
+    """Show one header and everything hanging off it."""
+    desk = ledger.office.piping
+    trunk = desk.trunk(label)
+    line(f"{trunk.header.label}  {trunk.header.name}  {trunk.device_count} devices")
+    rows(
+        ("device", "area", "state", "lateral"),
+        [(d.label, d.area, str(d.state), d.lateral or "-") for d in desk.devices_on_header(label)],
+    )
+
+
+@pipe.command("branch")
+@click.argument("label")
+@pass_ledger
+def pipe_branch(ledger: Ledger, label: str) -> None:
+    """Show one lateral and the devices on it."""
+    branch = ledger.office.piping.branch(label)
+    live = branch.live_devices
+    line(f"{branch.lateral.label} into {branch.lateral.header}")
+    line(f"  {len(branch.devices)} devices, {len(live)} of them on the run")
+    for device in branch.devices:
+        line(f"  {device.label}  {device.state}")
 
 
 @pipe.command("tree")

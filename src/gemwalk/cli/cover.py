@@ -199,6 +199,22 @@ def cover_repeats(ledger: Ledger, site: str, since: dt.date) -> None:
     rows(("station", "times"), [(place, str(count)) for place, count in repeats.items()])
 
 
+@cover.command("invalid")
+@click.argument("site")
+@pass_ledger
+def cover_invalid(ledger: Ledger, site: str) -> None:
+    """List the walkovers whose own conditions throw their readings out."""
+    subpart = ledger.office.sites.standard_of(site)
+    bad = ledger.office.surface.invalid_walks(site)
+    if not bad:
+        line("every walkover on the record stands")
+        return
+    for walk in bad:
+        line(f"{walk.label}  {walk.started_on}")
+        for fault in walk.faults(subpart):
+            line(f"  {fault}")
+
+
 @cover.command("walks")
 @click.argument("site")
 @pass_ledger

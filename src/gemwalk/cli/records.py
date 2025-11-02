@@ -244,6 +244,49 @@ def work_unhandled(ledger: Ledger, site: str, on: dt.date) -> None:
     line("nobody sent to " + ", ".join(waiting))
 
 
+@work.command("history")
+@click.argument("target")
+@pass_ledger
+def work_history(ledger: Ledger, target: str) -> None:
+    """List every order ever raised against one place, oldest first."""
+    orders = ledger.office.work.history(target)
+    if not orders:
+        line(f"no order has ever been raised against {target}")
+        return
+    rows(
+        ("order", "job", "raised", "due", "state", "done", "because"),
+        [
+            (
+                o.label,
+                str(o.job),
+                str(o.raised_on),
+                str(o.due_on),
+                str(o.state),
+                str(o.done_on or "-"),
+                o.because or "-",
+            )
+            for o in orders
+        ],
+    )
+
+
+@work.command("late")
+@click.argument("site")
+@click.option("--from", "first", type=DAY, required=True, help="the first day")
+@click.option("--to", "last", type=DAY, required=True, help="the last day")
+@pass_ledger
+def work_late(ledger: Ledger, site: str, first: dt.date, last: dt.date) -> None:
+    """List the orders that were finished after the date they carried."""
+    late = ledger.office.work.finished_late(site, first, last)
+    line(f"{len(late)} orders finished after their date")
+    for order in late:
+        over = (order.done_on - order.due_on).days if order.done_on else 0
+        line(
+            f"  {order.label}  {order.target}  due {order.due_on}, done {order.done_on}"
+            f" ({over} days over)"
+        )
+
+
 @work.command("crews")
 @click.argument("site")
 @click.option("--on", type=DAY, required=True, help="the day to measure against")
