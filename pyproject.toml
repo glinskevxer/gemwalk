@@ -21,6 +21,18 @@ dev = [
 [project.scripts]
 gemwalk = "gemwalk.cli.main:run"
 
+[tool.hatch.build.targets.sdist]
+include = [
+  "src",
+  "tests",
+  "docs",
+  "README.md",
+  "CHANGELOG.md",
+  "constraints.txt",
+  "check.sh",
+  "migrations.lock",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/gemwalk"]
 
