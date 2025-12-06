@@ -66,6 +66,20 @@ def test_a_walk_that_names_real_commands_is_clean(monkeypatch: pytest.MonkeyPatc
     assert check_cli.walk_faults() == []
 
 
+def test_a_walk_that_reads_as_nothing_at_all_is_a_fault(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(check_cli, "spoken_in_the_walk", list)
+    faults = check_cli.walk_faults()
+    assert any("nothing in it was read" in fault for fault in faults)
+
+
+def test_the_book_option_comes_off_before_the_command_is_read() -> None:
+    spoken = check_cli.spoken_in_the_walk()
+    assert "store init" in spoken
+    assert not any(command.startswith("--book") for command in spoken)
+
+
 def test_the_model_is_frozen_all_the_way_through() -> None:
     assert check_design.main() == 0
 

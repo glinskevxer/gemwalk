@@ -1,0 +1,258 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev]" -c constraints.txt
+      - run: python -m ruff check .
+      - run: python -m ruff format --check .
+      - run: python -m mypy
+
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev]" -c constraints.txt
+      - run: python -m gemwalk.tools.check_docstrings
+      - run: python -m gemwalk.tools.check_layers
+      - run: python -m gemwalk.tools.check_wiring
+      - run: python -m gemwalk.tools.check_tests
+      - run: python -m gemwalk.tools.check_cli
+      - run: python -m gemwalk.tools.check_sql
+      - run: python -m gemwalk.tools.check_indexes
+      - run: python -m gemwalk.tools.check_migrations
+      - run: python -m gemwalk.tools.check_naming
+      - run: python -m gemwalk.tools.check_errors
+      - run: python -m gemwalk.tools.check_design
+      - run: python -m gemwalk.tools.check_package
+      - run: python -m gemwalk.tools.check_readme
+      - run: python -m gemwalk.tools.schema_dump --check
+      - run: python -m gemwalk.tools.build_rules --check
+      - run: python -m gemwalk.tools.build_glossary --check
+      - run: python -m gemwalk.tools.release_check
+
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev]" -c constraints.txt
+      - run: python -m pytest -q
+
+  everything:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev]" -c constraints.txt
+      - run: ./check.sh
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e ".[dev]" -c constraints.txt
+      - run: python -m pytest -q --cov --cov-report=json --cov-report=term-missing
+      - run: python -m gemwalk.tools.coverage_gate --floor 95 --file-floor 80 --worst 6
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage.json
+
+  installed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install .
+      - run: gemwalk --version
+      - run: python -m gemwalk.tools.smoke
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build
+      - run: python -m pip install dist/*.whl
+      - run: python -c "import gemwalk; print(gemwalk.__version__)"
+      - run: python -m gemwalk.tools.smoke --quiet
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+  walk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install .
+      - name: a season through the console script
+        run: |
+          set -euo pipefail
+          book=/tmp/walk.sqlite3
+          rm -f "$book"
+          gemwalk --book "$book" store init
+          gemwalk --book "$book" site open NORTHRIDGE "Northridge Sanitary Landfill" \
+            --subpart XXX --permit MSW-1188-04 --zone America/Chicago \
+            --capacity 8400000 --opened 1998-06-01
+          gemwalk --book "$book" site elect NORTHRIDGE --on 2025-01-02 --nitrogen
+          gemwalk --book "$book" site area A-03 NORTHRIDGE "phase 3 north slope" \
+            --acres 12.4 --first-waste 2019-04-15
+          gemwalk --book "$book" site area A-04 NORTHRIDGE "phase 4 east" \
+            --acres 8.0 --first-waste 2020-06-01
+          gemwalk --book "$book" site areas NORTHRIDGE --on 2025-04-30
+          gemwalk --book "$book" site show NORTHRIDGE
+          gemwalk --book "$book" site list
+          gemwalk --book "$book" pipe header NORTHRIDGE "north trunk" \
+            --diameter 18 --material "HDPE SDR17" --length 2140 --on 2019-09-03
+          gemwalk --book "$book" pipe lateral NORTHRIDGE HD-01 \
+            --diameter 8 --material "HDPE SDR17" --length 460 --on 2019-09-03
+          for n in 1 2 3 4; do
+            gemwalk --book "$book" well drill NORTHRIDGE A-03 \
+              --station "N 1$n+40 E 3+15" --depth 92 --screen-top 22 \
+              --screen-bottom 86 --on 2021-05-12
+            gemwalk --book "$book" pipe tie "VW-00$n" LT-001
+            gemwalk --book "$book" well connect "VW-00$n" --on 2021-06-02
+          done
+          gemwalk --book "$book" well list NORTHRIDGE
+          gemwalk --book "$book" well roster NORTHRIDGE
+          gemwalk --book "$book" well board NORTHRIDGE --on 2025-04-08
+          gemwalk --book "$book" well offline NORTHRIDGE --on 2025-04-08
+          gemwalk --book "$book" pipe tree NORTHRIDGE
+          gemwalk --book "$book" pipe show HD-01
+          gemwalk --book "$book" pipe branch LT-001
+          gemwalk --book "$book" run open NORTHRIDGE --on 2025-04-08 \
+            --monitor "D. Kasprzak" --meter GEM5000-40912
+          gemwalk --book "$book" run read MR-2025-04-01 VW-001 --on 2025-04-08 \
+            --methane 51.8 --carbon 37.4 --oxygen 0.7 --balance 10.1 --temp 138.4 \
+            --static -1.2 --applied -11.0 --flow 38.0 --valve-before 3.0 --valve-after 4.0
+          for n in 2 3 4; do
+            gemwalk --book "$book" run read MR-2025-04-01 "VW-00$n" --on 2025-04-08 \
+              --methane 52.4 --carbon 38.1 --oxygen 0.6 --balance 8.9 --temp 118.2 \
+              --static -1.4 --applied -12.0 --flow 42.0 --valve-before 3.0 --valve-after 3.0
+          done
+          gemwalk --book "$book" run missing MR-2025-04-01
+          gemwalk --book "$book" run close MR-2025-04-01 --on 2025-04-08
+          gemwalk --book "$book" run show MR-2025-04-01
+          gemwalk --book "$book" run post MR-2025-04-01
+          gemwalk --book "$book" run list NORTHRIDGE
+          gemwalk --book "$book" run gaps NORTHRIDGE --first 2025-01 --last 2025-04
+          gemwalk --book "$book" record board NORTHRIDGE --on 2025-04-10
+          gemwalk --book "$book" record kinds NORTHRIDGE
+          gemwalk --book "$book" work from EX-2025-001 --job wellhead --on 2025-04-10
+          gemwalk --book "$book" work assign WO-2025-0001 "north crew" --on 2025-04-10
+          gemwalk --book "$book" work board NORTHRIDGE --on 2025-04-11
+          gemwalk --book "$book" work unhandled NORTHRIDGE --on 2025-04-11
+          gemwalk --book "$book" work crews NORTHRIDGE --on 2025-04-11
+          gemwalk --book "$book" work done WO-2025-0001 --on 2025-04-12 --note "seal replaced"
+          gemwalk --book "$book" work history VW-001
+          gemwalk --book "$book" work late NORTHRIDGE --from 2025-04-01 --to 2025-04-30
+          gemwalk --book "$book" record recheck EX-2025-001 128.5 --on 2025-04-12 --clear
+          gemwalk --book "$book" record show EX-2025-001
+          gemwalk --book "$book" record late NORTHRIDGE --on 2025-04-20
+          gemwalk --book "$book" record catch-up NORTHRIDGE --on 2025-04-20
+          gemwalk --book "$book" cover walk NORTHRIDGE --on 2025-05-13 \
+            --monitor "T. Wierzbicki" --instrument TVA1000B-8841 \
+            --background 2 --wind 3.4 --gust 7.1
+          gemwalk --book "$book" cover mark SW-2025Q2-01 A-03 "grid 14-J" 720 --on 2025-05-13
+          gemwalk --book "$book" cover finish SW-2025Q2-01 --on 2025-05-15
+          gemwalk --book "$book" cover repair SH-2025Q2-001 --on 2025-05-22
+          gemwalk --book "$book" cover remonitor SH-2025Q2-001 180 --on 2025-05-28
+          gemwalk --book "$book" cover board NORTHRIDGE --on 2025-05-30
+          gemwalk --book "$book" cover waiting NORTHRIDGE --step repair
+          gemwalk --book "$book" cover walks NORTHRIDGE
+          gemwalk --book "$book" cover invalid NORTHRIDGE
+          gemwalk --book "$book" cover gaps NORTHRIDGE --first 2025Q1 --last 2025Q2
+          gemwalk --book "$book" cover repeats NORTHRIDGE --since 2025-01-01
+          gemwalk --book "$book" plant install CD-01 NORTHRIDGE "west flare" \
+            --kind enclosed_flare --capacity 2400 --floor 1400 --on 2016-04-01
+          gemwalk --book "$book" plant log CD-01 "2025-06-11 09:00" \
+            --flow 1180 --methane 49.2 --temp 1512
+          gemwalk --book "$book" plant log CD-01 "2025-06-11 10:00" \
+            --flow 1160 --methane 49.0 --temp 1398
+          gemwalk --book "$book" plant log CD-01 "2025-06-11 11:00" \
+            --flow 1170 --methane 49.1 --temp 1402
+          gemwalk --book "$book" plant blocks CD-01 \
+            --from "2025-06-11 09:00" --to "2025-06-11 12:00"
+          gemwalk --book "$book" plant down CD-01 "2025-06-12 06:00" "blower bearing"
+          gemwalk --book "$book" plant up OT-2025-001 "2025-06-12 15:00"
+          gemwalk --book "$book" plant board NORTHRIDGE "2025-06-13 09:00"
+          gemwalk --book "$book" plant summary CD-01 \
+            --from "2025-06-11 00:00" --to "2025-06-13 00:00"
+          gemwalk --book "$book" water tape VW-003 20 --on 2025-06-09
+          gemwalk --book "$book" water standing NORTHRIDGE --on 2025-06-10
+          gemwalk --book "$book" water sump NORTHRIDGE "HD-01 low point" \
+            --capacity 550 --on 2019-09-03
+          gemwalk --book "$book" water pump CS-001 "2025-06-12 10:20" 410 \
+            --hauler "Vestermark Vacuum" --to "leachate pretreatment"
+          gemwalk --book "$book" water hauled NORTHRIDGE \
+            --from "2025-06-01 00:00" --to "2025-07-01 00:00"
+          gemwalk --book "$book" report month NORTHRIDGE 2025-04
+          gemwalk --book "$book" report quarter NORTHRIDGE 2025Q2
+          gemwalk --book "$book" report due NORTHRIDGE --on 2025-06-13
+          gemwalk --book "$book" report rate NORTHRIDGE --acceptance 180000 --age 27
+          gemwalk --book "$book" report rate NORTHRIDGE --acceptance 180000 --age 27 --nmoc 120
+          gemwalk --book "$book" store counts
+          gemwalk --book "$book" store check
+          gemwalk --book "$book" about
