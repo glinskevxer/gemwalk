@@ -32,6 +32,9 @@ class Repository(Generic[T]):
     columns: ClassVar[tuple[str, ...]] = ()
     order: ClassVar[str] = "label"
     auto: ClassVar[bool] = False
+    site_column: ClassVar[str] = "site"
+    retired_column: ClassVar[str] = ""
+    day_column: ClassVar[str] = ""
 
     def __init__(self, book: Book) -> None:
         self.book = book
@@ -127,6 +130,33 @@ class Repository(Generic[T]):
     def where(self, clause: str, params: tuple[Any, ...] = ()) -> list[T]:
         """Everything matching a narrowing clause, in the same order."""
         return [self.read(row) for row in self._select(clause, params)]
+
+    def of_site(self, site: str) -> list[T]:
+        """Everything belonging to one site, in the order the desk reads it.
+
+        Eight tables were each writing this, and each of them had to be read to
+        find out whether it meant every row or only the live ones. It means
+        every row. :meth:`live` is the other one.
+        """
+        return self.where(f"{self.site_column} = ?", (site,))
+
+    def live(self, site: str) -> list[T]:
+        """Everything at one site that has not been taken out of service."""
+        if not self.retired_column:
+            raise UnknownError("retirement column", self.table)
+        return self.where(f"{self.site_column} = ? AND {self.retired_column} IS NULL", (site,))
+
+    def between_days(self, site: str, first: str, last: str) -> list[T]:
+        """Everything at one site dated inside a range, oldest first."""
+        if not self.day_column:
+            raise UnknownError("date column", self.table)
+        rows = self.book.all(
+            f"SELECT * FROM {self.table} WHERE {self.site_column} = ? "
+            f"AND {self.day_column} >= ? AND {self.day_column} <= ? "
+            f"ORDER BY {self.day_column}, {self.key}",
+            (site, first, last),
+        )
+        return [self.read(row) for row in rows]
 
     def count(self) -> int:
         """How many things the table holds."""

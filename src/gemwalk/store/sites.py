@@ -105,10 +105,6 @@ class AreaRepository(Repository[Area]):
             "cover": item.cover.value,
         }
 
-    def of_site(self, site: str) -> list[Area]:
-        """Every area of one site."""
-        return self.where("site = ?", (site,))
-
     def filling(self, site: str) -> list[Area]:
         """Every area of one site that is still taking waste."""
         return self.where("site = ? AND last_waste IS NULL", (site,))

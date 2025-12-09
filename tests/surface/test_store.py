@@ -134,7 +134,7 @@ def test_spots_come_back_by_a_range_of_days(
     _, hits = store
     hits.add(a_hit())
     hits.add(a_hit("SH-2025Q3-001", found_on=dt.date(2025, 8, 6)))
-    inside = hits.found_between("NORTHRIDGE", "2025-05-01", "2025-05-31")
+    inside = hits.between_days("NORTHRIDGE", "2025-05-01", "2025-05-31")
     assert [h.label for h in inside] == ["SH-2025Q2-001"]
 
 

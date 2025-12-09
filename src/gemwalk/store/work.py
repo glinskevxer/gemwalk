@@ -16,6 +16,7 @@ class WorkOrderRepository(Repository[WorkOrder]):
 
     table: ClassVar[str] = "work_order"
     kind: ClassVar[str] = "work order"
+    day_column: ClassVar[str] = "raised_on"
     columns: ClassVar[tuple[str, ...]] = (
         "label",
         "site",
@@ -78,15 +79,6 @@ class WorkOrderRepository(Repository[WorkOrder]):
     def in_state(self, site: str, state: Standing) -> list[WorkOrder]:
         """Every order at one site in one state."""
         return self.where("site = ? AND state = ?", (site, state.value))
-
-    def raised_between(self, site: str, first: str, last: str) -> list[WorkOrder]:
-        """Every order at one site raised inside a range of days."""
-        rows = self.book.all(
-            "SELECT * FROM work_order WHERE site = ? AND raised_on >= ? AND raised_on <= ? "
-            "ORDER BY raised_on, label",
-            (site, first, last),
-        )
-        return [self.read(row) for row in rows]
 
 
 __all__ = ["WorkOrderRepository"]

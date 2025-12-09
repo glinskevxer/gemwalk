@@ -56,10 +56,6 @@ class RunRepository(Repository[Run]):
             "note": item.note,
         }
 
-    def of_site(self, site: str) -> list[Run]:
-        """Every run at one site, oldest label first."""
-        return self.where("site = ?", (site,))
-
     def open_runs(self, site: str) -> list[Run]:
         """Every run at one site that is still taking readings."""
         return self.where("site = ? AND closed_on IS NULL", (site,))

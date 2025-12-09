@@ -140,7 +140,7 @@ def _findings_section(
     office: Office, report: Report, site: str, month: Month, day: dt.date
 ) -> None:
     section = report.section("the findings")
-    opened = office.compliance.exceedances.opened_between(
+    opened = office.compliance.exceedances.between_days(
         site, month.first_day.isoformat(), month.last_day.isoformat()
     )
     section.say(f"{len(opened)} opened this month")

@@ -66,10 +66,6 @@ class WalkRepository(Repository[Walk]):
             "note": item.note,
         }
 
-    def of_site(self, site: str) -> list[Walk]:
-        """Every walk at one site."""
-        return self.where("site = ?", (site,))
-
     def in_quarter(self, site: str, quarter: Quarter) -> list[Walk]:
         """Every walk at one site inside one quarter."""
         return self.where("site = ? AND quarter = ?", (site, str(quarter)))
@@ -84,6 +80,7 @@ class HitRepository(Repository[Hit]):
 
     table: ClassVar[str] = "hit"
     kind: ClassVar[str] = "hit"
+    day_column: ClassVar[str] = "found_on"
     columns: ClassVar[tuple[str, ...]] = (
         "label",
         "walk",
@@ -154,15 +151,6 @@ class HitRepository(Repository[Hit]):
     def at_step(self, site: str, step: Step) -> list[Hit]:
         """Every spot at one site waiting on one kind of work."""
         return self.where("site = ? AND stage = ?", (site, step.value))
-
-    def found_between(self, site: str, first: str, last: str) -> list[Hit]:
-        """Every spot at one site found inside a range of days."""
-        rows = self.book.all(
-            "SELECT * FROM hit WHERE site = ? AND found_on >= ? AND found_on <= ? "
-            "ORDER BY found_on, label",
-            (site, first, last),
-        )
-        return [self.read(row) for row in rows]
 
     def at_station(self, site: str, station: str) -> list[Hit]:
         """Every spot ever found at one place on the cover, oldest first."""

@@ -16,6 +16,7 @@ class HeaderRepository(Repository[Header]):
 
     table: ClassVar[str] = "header"
     kind: ClassVar[str] = "header"
+    retired_column: ClassVar[str] = "retired_on"
     columns: ClassVar[tuple[str, ...]] = (
         "label",
         "site",
@@ -53,20 +54,13 @@ class HeaderRepository(Repository[Header]):
             "retired_on": day_text(item.retired_on),
         }
 
-    def of_site(self, site: str) -> list[Header]:
-        """Every header at one site, retired ones included."""
-        return self.where("site = ?", (site,))
-
-    def live(self, site: str) -> list[Header]:
-        """Every header still on the system at one site."""
-        return self.where("site = ? AND retired_on IS NULL", (site,))
-
 
 class LateralRepository(Repository[Lateral]):
     """The branch lines tying devices into headers."""
 
     table: ClassVar[str] = "lateral"
     kind: ClassVar[str] = "lateral"
+    retired_column: ClassVar[str] = "retired_on"
     columns: ClassVar[tuple[str, ...]] = (
         "label",
         "site",
@@ -107,10 +101,6 @@ class LateralRepository(Repository[Lateral]):
     def of_header(self, header: str) -> list[Lateral]:
         """Every lateral tied into one header."""
         return self.where("header = ?", (header,))
-
-    def live(self, site: str) -> list[Lateral]:
-        """Every lateral still on the system at one site."""
-        return self.where("site = ? AND retired_on IS NULL", (site,))
 
 
 __all__ = ["HeaderRepository", "LateralRepository"]

@@ -144,7 +144,7 @@ class WorkDesk:
         """
         raised = {
             order.because
-            for order in self.orders.raised_between(site, "0001-01-01", on.isoformat())
+            for order in self.orders.between_days(site, "0001-01-01", on.isoformat())
             if order.because is not None
         }
         waiting = [e.label for e in self.compliance.exceedances.open_at(site)]
@@ -165,7 +165,7 @@ class WorkDesk:
 
     def finished_late(self, site: str, first: dt.date, last: dt.date) -> list[WorkOrder]:
         """Every order finished after its date inside a range."""
-        window = self.orders.raised_between(site, first.isoformat(), last.isoformat())
+        window = self.orders.between_days(site, first.isoformat(), last.isoformat())
         return [order for order in window if order.was_late()]
 
 

@@ -154,7 +154,7 @@ def test_exceedances_come_back_by_a_range_of_days_and_by_reading(
     found, _ = store
     found.add(an_exceedance())
     found.add(an_exceedance("EX-2025-002", "VW-002", reading=2, opened_on=dt.date(2025, 6, 3)))
-    inside = found.opened_between("NORTHRIDGE", "2025-04-01", "2025-04-30")
+    inside = found.between_days("NORTHRIDGE", "2025-04-01", "2025-04-30")
     assert [e.label for e in inside] == ["EX-2025-001"]
     assert [e.label for e in found.for_reading(2)] == ["EX-2025-002"]
 

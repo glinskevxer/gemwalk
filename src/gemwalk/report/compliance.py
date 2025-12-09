@@ -103,7 +103,7 @@ def _surface_section(office: Office, report: Report, site: str, quarter: Quarter
     missed = office.surface.quarters_missed(site, quarter, quarter)
     if missed:
         section.say("this quarter has no valid finished walkover on the record")
-    hits = office.surface.hits.found_between(
+    hits = office.surface.hits.between_days(
         site, quarter.first_day.isoformat(), quarter.last_day.isoformat()
     )
     section.say(f"{len(hits)} spots over the limit")

@@ -19,6 +19,7 @@ class SumpRepository(Repository[Sump]):
 
     table: ClassVar[str] = "sump"
     kind: ClassVar[str] = "sump"
+    retired_column: ClassVar[str] = "retired_on"
     columns: ClassVar[tuple[str, ...]] = (
         "label",
         "site",
@@ -52,14 +53,6 @@ class SumpRepository(Repository[Sump]):
             "installed_on": day_text(item.installed_on),
             "retired_on": day_text(item.retired_on),
         }
-
-    def of_site(self, site: str) -> list[Sump]:
-        """Every sump at one site."""
-        return self.where("site = ?", (site,))
-
-    def live(self, site: str) -> list[Sump]:
-        """Every sump still on the system at one site."""
-        return self.where("site = ? AND retired_on IS NULL", (site,))
 
 
 class LevelRepository(Repository[Level]):

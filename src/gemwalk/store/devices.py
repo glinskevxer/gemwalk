@@ -77,10 +77,6 @@ class DeviceRepository(Repository[Device]):
             "lateral": item.lateral,
         }
 
-    def of_site(self, site: str) -> list[Device]:
-        """Every device at one site, abandoned ones included."""
-        return self.where("site = ?", (site,))
-
     def of_area(self, area: str) -> list[Device]:
         """Every device in one filling area."""
         return self.where("area = ?", (area,))

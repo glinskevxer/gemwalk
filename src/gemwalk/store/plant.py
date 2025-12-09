@@ -43,6 +43,7 @@ class ControlRepository(Repository[Control]):
 
     table: ClassVar[str] = "control"
     kind: ClassVar[str] = "control device"
+    retired_column: ClassVar[str] = "retired_on"
     columns: ClassVar[tuple[str, ...]] = (
         "label",
         "site",
@@ -79,14 +80,6 @@ class ControlRepository(Repository[Control]):
             "installed_on": day_text(item.installed_on),
             "retired_on": day_text(item.retired_on),
         }
-
-    def of_site(self, site: str) -> list[Control]:
-        """Every control device at one site."""
-        return self.where("site = ?", (site,))
-
-    def live(self, site: str) -> list[Control]:
-        """Every control device still on the system at one site."""
-        return self.where("site = ? AND retired_on IS NULL", (site,))
 
 
 class OperationRepository(Repository[Operation]):

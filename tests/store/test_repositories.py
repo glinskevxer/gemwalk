@@ -133,3 +133,44 @@ def test_the_label_table_hands_out_numbers_and_remembers_them(book: Book) -> Non
 def test_the_counters_and_the_table_agree(book: Book) -> None:
     Labels(book).next("device", dt.date(2025, 4, 8))
     assert labels.LabelRepository(book).last("device", "-") == 1
+
+
+def test_a_table_with_no_retirement_column_says_so(book: Book) -> None:
+    with pytest.raises(UnknownError, match="retirement column"):
+        site_store.AreaRepository(book).live("NORTHRIDGE")
+
+
+def test_a_table_with_no_date_column_says_so(book: Book) -> None:
+    with pytest.raises(UnknownError, match="date column"):
+        devices.DeviceRepository(book).between_days("NORTHRIDGE", "2025-01-01", "2025-12-31")
+
+
+def test_the_tables_that_can_be_retired_all_name_their_column() -> None:
+    retire: list[type[Repository[Any]]] = [
+        piping.HeaderRepository,
+        piping.LateralRepository,
+        plant.ControlRepository,
+        liquids.SumpRepository,
+    ]
+    for kind in retire:
+        assert kind.retired_column == "retired_on"
+
+
+def test_the_tables_that_are_asked_about_by_day_name_their_column() -> None:
+    dated: dict[type[Repository[Any]], str] = {
+        surface.HitRepository: "found_on",
+        exceedances.ExceedanceRepository: "opened_on",
+        work.WorkOrderRepository: "raised_on",
+    }
+    for kind, column in dated.items():
+        assert kind.day_column == column
+        assert column in kind.columns
+
+
+@pytest.mark.parametrize("kind", REPOSITORIES, ids=lambda k: k.__name__)
+def test_a_repository_that_names_a_site_column_has_one(
+    kind: type[Repository[Any]], book: Book
+) -> None:
+    columns = {str(row["name"]) for row in book.all(f"PRAGMA table_info('{kind.table}')")}
+    if kind.site_column in columns:
+        assert kind(book).of_site("NORTHRIDGE") == []

@@ -180,7 +180,7 @@ class SurfaceDesk:
     def repeat_stations(self, site: str, since: dt.date) -> dict[str, int]:
         """Places on the cover that have been marked more than once."""
         tally: dict[str, int] = {}
-        for hit in self.hits.found_between(site, since.isoformat(), "9999-12-31"):
+        for hit in self.hits.between_days(site, since.isoformat(), "9999-12-31"):
             tally[hit.station] = tally.get(hit.station, 0) + 1
         return {station: count for station, count in sorted(tally.items()) if count > 1}
 

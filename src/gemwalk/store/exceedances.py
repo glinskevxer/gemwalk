@@ -18,6 +18,7 @@ class ExceedanceRepository(Repository[Exceedance]):
 
     table: ClassVar[str] = "exceedance"
     kind: ClassVar[str] = "exceedance"
+    day_column: ClassVar[str] = "opened_on"
     columns: ClassVar[tuple[str, ...]] = (
         "label",
         "site",
@@ -91,15 +92,6 @@ class ExceedanceRepository(Repository[Exceedance]):
         """Every exceedance ever opened on one wellhead, oldest first."""
         rows = self.book.all(
             "SELECT * FROM exceedance WHERE device = ? ORDER BY opened_on, label", (device,)
-        )
-        return [self.read(row) for row in rows]
-
-    def opened_between(self, site: str, first: str, last: str) -> list[Exceedance]:
-        """Every exceedance at a site opened inside a range of days."""
-        rows = self.book.all(
-            "SELECT * FROM exceedance WHERE site = ? AND opened_on >= ? AND opened_on <= ? "
-            "ORDER BY opened_on, label",
-            (site, first, last),
         )
         return [self.read(row) for row in rows]
 
