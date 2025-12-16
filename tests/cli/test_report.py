@@ -111,3 +111,15 @@ def test_the_due_list_puts_the_soonest_first(cli: Shell) -> None:
     )
     out = cli.ok("report", "due", "NORTHRIDGE", "--on", "2025-04-10")
     assert out.index("EX-2025-001") < out.index("WO-2025-0001")
+
+
+def test_the_well_card_prints(cli: Shell) -> None:
+    walk(cli, "2025-04-08")
+    out = cli.ok("report", "device", "VW-001", "--on", "2025-04-30")
+    assert "VW-001 well card" in out
+    assert "how it was built" in out
+    assert "64.0 ft of slot" in out
+
+
+def test_a_device_the_book_never_issued_is_refused(cli: Shell) -> None:
+    assert "VW-999" in cli.fails("report", "device", "VW-999")
