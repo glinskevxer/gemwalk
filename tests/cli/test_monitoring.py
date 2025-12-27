@@ -202,3 +202,46 @@ def test_a_range_with_every_month_walked_says_so(cli: Shell) -> None:
     walk(cli, "2025-04-08")
     out = cli.ok("run", "gaps", "NORTHRIDGE", "--first", "2025-04", "--last", "2025-04")
     assert "every month in the range was walked" in out
+
+
+def test_the_quality_table_says_what_each_wellhead_looks_like(cli: Shell) -> None:
+    label = walk(cli, "2025-04-08")
+    out = cli.ok("run", "quality", label)
+    assert "gas the way the refuse makes it" in out
+    assert "MMBtu an hour" in out
+    assert "scfm off the field" in out
+
+
+def test_a_leaking_wellhead_shows_as_air(cli: Shell) -> None:
+    label = walk(
+        cli, "2025-04-08", "VW-002", methane="41.0", carbon="30.0", oxygen="6.1", balance="22.8"
+    )
+    out = cli.ok("run", "quality", label)
+    assert "air being pulled in" in out
+
+
+def test_a_wellhead_read_once_cannot_drift(cli: Shell) -> None:
+    walk(cli, "2025-04-08")
+    assert "not been read enough times" in cli.ok("run", "drift", "VW-001")
+
+
+def test_a_wellhead_losing_gas_says_which_way(cli: Shell) -> None:
+    walk(cli, "2025-04-08")
+    walk(cli, "2025-05-06", "VW-001", methane="44.0", carbon="32.0", balance="23.4")
+    out = cli.ok("run", "drift", "VW-001")
+    assert "gone down" in out
+
+
+def test_the_wellheads_of_one_shape_can_be_listed(cli: Shell) -> None:
+    label = walk(
+        cli, "2025-04-08", "VW-002", methane="38.0", carbon="27.0", oxygen="0.4", balance="34.5"
+    )
+    out = cli.ok("run", "shape", label, "--like", "starved")
+    assert "1 wellheads read as" in out
+    assert "VW-002" in out
+    assert "nitrogen unaccounted for" in out
+
+
+def test_a_shape_nothing_read_as_comes_back_empty(cli: Shell) -> None:
+    label = walk(cli, "2025-04-08")
+    assert "0 wellheads read as" in cli.ok("run", "shape", label, "--like", "thin")

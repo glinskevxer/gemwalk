@@ -18,6 +18,7 @@ import datetime as dt
 from dataclasses import dataclass, replace
 
 from gemwalk.errors import OrderError, RuleError
+from gemwalk.quality import Quality
 from gemwalk.units import Flow, Percent, Pressure, Temperature
 
 BALANCE_TOLERANCE = 2.0
@@ -155,6 +156,16 @@ class Reading:
     def is_shut(self) -> bool:
         """True when the crew left the wellhead valve closed."""
         return self.valve_after == 0.0
+
+    @property
+    def analysis(self) -> Quality:
+        """The four gas figures, read for what they say about the well."""
+        return Quality(
+            methane=self.methane,
+            carbon=self.carbon,
+            oxygen=self.oxygen,
+            balance=self.balance,
+        )
 
     @property
     def methane_share(self) -> float:

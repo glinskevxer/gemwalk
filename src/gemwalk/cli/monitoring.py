@@ -8,6 +8,7 @@ import click
 
 from gemwalk.cli.support import DAY, Ledger, line, pass_ledger, rows
 from gemwalk.clock import Month
+from gemwalk.quality import Character
 
 
 @click.group()
@@ -142,6 +143,69 @@ def run_show(ledger: Ledger, label: str) -> None:
             )
         )
     rows(("well", "CH4", "O2", "bal", "temp", "gauge", "flow", "over"), body)
+
+
+@run.command("quality")
+@click.argument("label")
+@pass_ledger
+def run_quality(ledger: Ledger, label: str) -> None:
+    """Read every analysis on a run for what it says about the well."""
+    desk = ledger.office.monitoring
+    shapes = desk.characters(label)
+    body: list[tuple[str, ...]] = []
+    for reading in desk.readings.of_run(label):
+        analysis = reading.analysis
+        body.append(
+            (
+                reading.device,
+                str(reading.methane_reading),
+                str(analysis.corrected_methane),
+                f"{analysis.air:.1f}%",
+                f"{analysis.nitrogen_ratio:.1f}" if reading.oxygen > 0 else "-",
+                f"{analysis.heat_value():.0f}",
+                str(shapes[reading.device]),
+            )
+        )
+    rows(("well", "CH4", "corrected", "air", "N2/O2", "btu", "what it looks like"), body)
+    line(
+        f"{desk.field_flow(label):,.0f} scfm off the field, {desk.energy(label):,.2f} MMBtu an hour"
+    )
+
+
+@run.command("shape")
+@click.argument("label")
+@click.option(
+    "--like",
+    type=click.Choice([c.name.lower() for c in Character]),
+    required=True,
+    help="the shape of analysis to list",
+)
+@pass_ledger
+def run_shape(ledger: Ledger, label: str, like: str) -> None:
+    """List the wellheads on a run whose analysis has one shape."""
+    wanted = Character[like.upper()]
+    found = ledger.office.monitoring.of_character(label, wanted)
+    line(f"{len(found)} wellheads read as {wanted}")
+    for reading in found:
+        analysis = reading.analysis
+        line(
+            f"  {reading.device}  {reading.methane_reading} methane, "
+            f"{analysis.air:.1f}% air, {analysis.excess_nitrogen:.1f}% nitrogen unaccounted for"
+        )
+
+
+@run.command("drift")
+@click.argument("device")
+@click.option("--back", type=int, default=3, help="how many readings to look over")
+@pass_ledger
+def run_drift(ledger: Ledger, device: str, back: int) -> None:
+    """Say which way a wellhead's corrected methane has been going."""
+    moved = ledger.office.monitoring.drifting(device, back)
+    if moved is None:
+        line(f"{device} has not been read enough times to say")
+        return
+    way = "up" if moved > 0 else "down"
+    line(f"{device} corrected methane has gone {way} {abs(moved):.1f} points")
 
 
 @run.command("post")

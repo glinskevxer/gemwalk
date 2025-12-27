@@ -20,6 +20,7 @@ from gemwalk.errors import RuleError, StateError
 from gemwalk.ids import Labels
 from gemwalk.model.device import Device
 from gemwalk.model.reading import Reading, Run
+from gemwalk.quality import Character
 from gemwalk.service.sites import SiteDesk
 from gemwalk.service.wellfield import WellfieldDesk
 from gemwalk.store.book import Book
@@ -143,6 +144,38 @@ class MonitoringDesk:
     def exceedances(self, run: str) -> list[Assessment]:
         """Only the wellheads on one run that are over something."""
         return [a for a in self.assessments(run) if not a.is_clear]
+
+    def characters(self, run: str) -> dict[str, Character]:
+        """What each wellhead's analysis says is going on, in device order."""
+        return {
+            reading.device: reading.analysis.character() for reading in self.readings.of_run(run)
+        }
+
+    def of_character(self, run: str, character: Character) -> list[Reading]:
+        """Every reading on a run whose analysis has one shape."""
+        return [r for r in self.readings.of_run(run) if r.analysis.character() is character]
+
+    def energy(self, run: str) -> float:
+        """Million british thermal units an hour the whole field was giving."""
+        return sum(r.analysis.energy(r.gas_flow) for r in self.readings.of_run(run))
+
+    def field_flow(self, run: str) -> float:
+        """Standard cubic feet a minute the whole field was giving."""
+        return sum(r.flow for r in self.readings.of_run(run))
+
+    def drifting(self, device: str, back: int = 3) -> float | None:
+        """How far corrected methane has moved over the last *back* readings.
+
+        Corrected methane rather than methane, because a well that is leaking
+        harder every month reads as falling methane and flat corrected methane,
+        and only one of those is a problem with the well.
+        """
+        history = self.readings.of_device(device)[-back:]
+        if len(history) < 2:
+            return None
+        first = history[0].analysis.corrected_methane.value
+        last = history[-1].analysis.corrected_methane.value
+        return last - first
 
     def runs_in(self, site: str, month: Month) -> list[Run]:
         """Every run at a site started inside one month."""
