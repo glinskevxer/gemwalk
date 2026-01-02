@@ -1,4 +1,4 @@
--- The schema as sqlite holds it at migration 11.
+-- The schema as sqlite holds it at migration 12.
 -- Written by gemwalk.tools.schema_dump. Do not edit: add a migration.
 
 CREATE TABLE area (
@@ -10,6 +10,18 @@ CREATE TABLE area (
       last_waste   TEXT,
       closed_on    TEXT,
       cover        TEXT NOT NULL
+    );
+
+CREATE TABLE calibration (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      instrument  TEXT NOT NULL REFERENCES instrument(label),
+      at          TEXT NOT NULL,
+      standard    TEXT NOT NULL,
+      expected    REAL NOT NULL,
+      before      REAL NOT NULL,
+      after       REAL NOT NULL,
+      by_whom     TEXT NOT NULL,
+      note        TEXT NOT NULL DEFAULT ''
     );
 
 CREATE TABLE control (
@@ -81,6 +93,17 @@ CREATE TABLE hit (
       remonitor_on  TEXT,
       closed_on     TEXT,
       note          TEXT NOT NULL DEFAULT ''
+    );
+
+CREATE TABLE instrument (
+      label        TEXT PRIMARY KEY,
+      site         TEXT NOT NULL REFERENCES site(label),
+      kind         TEXT NOT NULL,
+      maker        TEXT NOT NULL,
+      model        TEXT NOT NULL,
+      serial       TEXT NOT NULL,
+      in_service   TEXT NOT NULL,
+      retired_on   TEXT
     );
 
 CREATE TABLE label_run (
@@ -242,6 +265,10 @@ CREATE TABLE work_order (
 
 CREATE INDEX area_by_site ON area(site);
 
+CREATE INDEX calibration_by_at ON calibration(at);
+
+CREATE INDEX calibration_by_instrument ON calibration(instrument);
+
 CREATE INDEX control_by_site ON control(site);
 
 CREATE INDEX device_by_area ON device(area);
@@ -269,6 +296,8 @@ CREATE INDEX hit_by_site ON hit(site);
 CREATE INDEX hit_by_stage ON hit(stage);
 
 CREATE INDEX hit_by_walk ON hit(walk);
+
+CREATE INDEX instrument_by_site ON instrument(site);
 
 CREATE INDEX lateral_by_header ON lateral(header);
 

@@ -393,6 +393,39 @@ M011 = Migration(
     """,
 )
 
+M012 = Migration(
+    number=12,
+    name="the instruments and the calibrations behind every reading",
+    script="""
+    CREATE TABLE instrument (
+      label        TEXT PRIMARY KEY,
+      site         TEXT NOT NULL REFERENCES site(label),
+      kind         TEXT NOT NULL,
+      maker        TEXT NOT NULL,
+      model        TEXT NOT NULL,
+      serial       TEXT NOT NULL,
+      in_service   TEXT NOT NULL,
+      retired_on   TEXT
+    );
+
+    CREATE TABLE calibration (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      instrument  TEXT NOT NULL REFERENCES instrument(label),
+      at          TEXT NOT NULL,
+      standard    TEXT NOT NULL,
+      expected    REAL NOT NULL,
+      before      REAL NOT NULL,
+      after       REAL NOT NULL,
+      by_whom     TEXT NOT NULL,
+      note        TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE INDEX instrument_by_site ON instrument(site);
+    CREATE INDEX calibration_by_instrument ON calibration(instrument);
+    CREATE INDEX calibration_by_at ON calibration(at);
+    """,
+)
+
 MIGRATIONS: tuple[Migration, ...] = (
     M001,
     M002,
@@ -405,6 +438,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     M009,
     M010,
     M011,
+    M012,
 )
 
 
