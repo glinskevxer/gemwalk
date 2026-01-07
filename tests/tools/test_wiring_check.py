@@ -20,7 +20,7 @@ def test_the_survey_finds_the_desks() -> None:
     found = check_wiring.survey()
     assert "SiteDesk.open_site" in found.methods
     assert "ComplianceDesk.post_run" in found.methods
-    assert "open_site" in found.called_in_package
+    assert found.called_elsewhere("open_site", "gemwalk.service.sites")
 
 
 def test_a_public_method_is_listed_and_a_private_one_is_not() -> None:
@@ -54,5 +54,28 @@ def test_a_method_only_the_suite_calls_is_told_apart() -> None:
 
 
 def test_a_method_the_package_calls_is_not_a_fault() -> None:
-    found = check_wiring.Surface(methods={"Desk.used": "probe.py:1"}, called_in_package={"used"})
+    found = check_wiring.Surface(
+        methods={"Desk.used": "probe.py:1"},
+        homes={"Desk.used": "gemwalk.service.probe"},
+        callers={"used": {"gemwalk.cli.probe"}},
+    )
     assert check_wiring.faults(found) == []
+
+
+def test_a_method_only_its_own_module_calls_is_still_a_draft() -> None:
+    found = check_wiring.Surface(
+        methods={"Desk.inner": "probe.py:1"},
+        homes={"Desk.inner": "gemwalk.service.probe"},
+        callers={"inner": {"gemwalk.service.probe"}},
+    )
+    assert check_wiring.faults(found) == ["probe.py:1: Desk.inner has no caller at all"]
+
+
+def test_a_method_another_desk_calls_is_wired() -> None:
+    found = check_wiring.Surface(
+        methods={"Desk.used": "probe.py:1"},
+        homes={"Desk.used": "gemwalk.service.probe"},
+        callers={"used": {"gemwalk.service.other"}},
+    )
+    assert check_wiring.faults(found) == []
+    assert found.called_elsewhere("used", "gemwalk.service.probe")

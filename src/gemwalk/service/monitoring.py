@@ -21,6 +21,7 @@ from gemwalk.ids import Labels
 from gemwalk.model.device import Device
 from gemwalk.model.reading import Reading, Run
 from gemwalk.quality import Character
+from gemwalk.service.instruments import InstrumentDesk
 from gemwalk.service.sites import SiteDesk
 from gemwalk.service.wellfield import WellfieldDesk
 from gemwalk.store.book import Book
@@ -36,11 +37,20 @@ class MonitoringDesk:
         self.readings = ReadingRepository(book)
         self.wellfield = WellfieldDesk(book)
         self.sites = SiteDesk(book)
+        self.instruments = InstrumentDesk(book)
         self.labels = Labels(book)
 
     def open_run(self, site: str, on: dt.date, *, monitor: str, meter: str) -> Run:
-        """Start a monitoring pass over a site."""
+        """Start a monitoring pass over a site.
+
+        A meter the book knows about has to have been fit to use that day. A
+        meter it does not know about is a serial off an old paper sheet and is
+        taken as written, because refusing those would make it impossible to
+        type in the years that came before this package.
+        """
         self.sites.sites.get(site)
+        if self.instruments.instruments.find(meter) is not None:
+            self.instruments.must_be_good(meter, on)
         already = self.runs.open_runs(site)
         if already:
             names = ", ".join(r.label for r in already)

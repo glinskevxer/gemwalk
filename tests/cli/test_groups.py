@@ -12,6 +12,7 @@ import pytest
 
 from gemwalk.cli import (
     cover,
+    instrument,
     landfill,
     monitoring,
     plant,
@@ -33,6 +34,7 @@ GROUPS: dict[str, click.Group] = {
     "plant": plant.plant,
     "water": plant.water,
     "report": report.report,
+    "meter": instrument.meter,
 }
 
 

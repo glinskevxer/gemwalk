@@ -16,6 +16,7 @@ from pathlib import Path
 from types import TracebackType
 
 from gemwalk.service.compliance import ComplianceDesk
+from gemwalk.service.instruments import InstrumentDesk
 from gemwalk.service.liquids import LiquidsDesk
 from gemwalk.service.monitoring import MonitoringDesk
 from gemwalk.service.piping import PipingDesk
@@ -35,6 +36,7 @@ class Office:
         self.book = book
         self.sites = SiteDesk(book)
         self.wellfield = WellfieldDesk(book)
+        self.instruments = InstrumentDesk(book)
         self.piping = PipingDesk(book)
         self.monitoring = MonitoringDesk(book)
         self.compliance = ComplianceDesk(book)

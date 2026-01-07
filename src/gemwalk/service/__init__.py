@@ -1,6 +1,7 @@
 """The desks. Everything that has to look at more than one record lives here."""
 
 from gemwalk.service.compliance import ComplianceDesk
+from gemwalk.service.instruments import InstrumentDesk
 from gemwalk.service.liquids import LiquidsDesk
 from gemwalk.service.monitoring import MonitoringDesk
 from gemwalk.service.office import Office
@@ -13,6 +14,7 @@ from gemwalk.service.work import WorkDesk
 
 __all__ = [
     "ComplianceDesk",
+    "InstrumentDesk",
     "LiquidsDesk",
     "MonitoringDesk",
     "Office",

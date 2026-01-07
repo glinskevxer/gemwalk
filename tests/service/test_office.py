@@ -27,6 +27,7 @@ def test_every_desk_is_on_the_same_book(office: Office) -> None:
     desks: list[Any] = [
         office.sites,
         office.wellfield,
+        office.instruments,
         office.piping,
         office.monitoring,
         office.compliance,
