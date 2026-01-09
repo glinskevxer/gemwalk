@@ -77,6 +77,7 @@ class AreaRepository(Repository[Area]):
         "last_waste",
         "closed_on",
         "cover",
+        "target_radius",
     )
 
     def read(self, row: Row) -> Area:
@@ -90,6 +91,7 @@ class AreaRepository(Repository[Area]):
             last_waste=read_day_or_none(row["last_waste"]),
             closed_on=read_day_or_none(row["closed_on"]),
             cover=Cover(str(row["cover"])),
+            target_radius=float(row["target_radius"]),
         )
 
     def write(self, item: Area) -> dict[str, Any]:
@@ -103,6 +105,7 @@ class AreaRepository(Repository[Area]):
             "last_waste": day_text(item.last_waste),
             "closed_on": day_text(item.closed_on),
             "cover": item.cover.value,
+            "target_radius": item.target_radius,
         }
 
     def filling(self, site: str) -> list[Area]:

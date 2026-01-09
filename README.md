@@ -48,7 +48,7 @@ Python 3.12 or newer. The only runtime dependency is click.
 
 ```console
 $ gemwalk store init
-northridge.sqlite3 is at schema 12 of 12
+northridge.sqlite3 is at schema 13 of 13
 $ gemwalk site open NORTHRIDGE "Northridge Sanitary Landfill" --subpart XXX --permit MSW-1188-04 --zone America/Chicago --capacity 8400000 --opened 1998-06-01
 NORTHRIDGE opened under subpart XXX, permit MSW-1188-04
 $ gemwalk site area A-03 NORTHRIDGE "phase 3 north slope" --acres 12.4 --first-waste 2019-04-15

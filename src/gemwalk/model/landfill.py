@@ -121,10 +121,13 @@ class Area:
     last_waste: dt.date | None = None
     closed_on: dt.date | None = None
     cover: Cover = Cover.DAILY
+    target_radius: float = 100.0
 
     def __post_init__(self) -> None:
         if self.acres <= 0:
             raise RuleError("area", "an area covers some ground")
+        if self.target_radius <= 0:
+            raise RuleError("area", "a design radius is a real distance")
         if self.last_waste is not None and self.last_waste < self.first_waste:
             raise OrderError("area", str(self.first_waste), str(self.last_waste))
         if self.closed_on is not None:

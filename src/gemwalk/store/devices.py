@@ -33,6 +33,7 @@ class DeviceRepository(Repository[Device]):
         "hov_degrees",
         "hov_approved",
         "lateral",
+        "influence",
     )
 
     def read(self, row: Row) -> Device:
@@ -54,6 +55,7 @@ class DeviceRepository(Repository[Device]):
             hov_degrees=None if row["hov_degrees"] is None else float(row["hov_degrees"]),
             hov_approved=read_day_or_none(row["hov_approved"]),
             lateral=None if row["lateral"] is None else str(row["lateral"]),
+            influence=float(row["influence"]),
         )
 
     def write(self, item: Device) -> dict[str, Any]:
@@ -75,6 +77,7 @@ class DeviceRepository(Repository[Device]):
             "hov_degrees": item.hov_degrees,
             "hov_approved": day_text(item.hov_approved),
             "lateral": item.lateral,
+            "influence": item.influence,
         }
 
     def of_area(self, area: str) -> list[Device]:

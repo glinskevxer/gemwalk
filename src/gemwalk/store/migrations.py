@@ -426,6 +426,15 @@ M012 = Migration(
     """,
 )
 
+M013 = Migration(
+    number=13,
+    name="how far a device pulls, and what an area is meant to have",
+    script="""
+    ALTER TABLE device ADD COLUMN influence REAL NOT NULL DEFAULT 100.0;
+    ALTER TABLE area ADD COLUMN target_radius REAL NOT NULL DEFAULT 100.0;
+    """,
+)
+
 MIGRATIONS: tuple[Migration, ...] = (
     M001,
     M002,
@@ -439,6 +448,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     M010,
     M011,
     M012,
+    M013,
 )
 
 

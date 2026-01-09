@@ -13,12 +13,15 @@ approved, and it never lifts the oxygen or pressure limits.
 from __future__ import annotations
 
 import datetime as dt
+import math
 from dataclasses import dataclass, replace
 from enum import Enum
 
 from gemwalk.errors import OrderError, RuleError, StateError
 from gemwalk.rules import Standard
 from gemwalk.units import Temperature
+
+SQUARE_FEET_IN_AN_ACRE = 43_560.0
 
 
 class Kind(Enum):
@@ -65,6 +68,7 @@ class Device:
     hov_degrees: float | None = None
     hov_approved: dt.date | None = None
     lateral: str | None = None
+    influence: float = 100.0
 
     def __post_init__(self) -> None:
         if self.total_depth <= 0:
@@ -81,6 +85,8 @@ class Device:
             )
         if self.connected_on is not None and self.connected_on < self.drilled_on:
             raise OrderError("device", str(self.drilled_on), str(self.connected_on))
+        if self.influence <= 0:
+            raise RuleError("device", "a device pulls on some ground")
 
     @property
     def screen_length(self) -> float:
@@ -91,6 +97,17 @@ class Device:
     def is_connected(self) -> bool:
         """True when the device is on the pipe tree and being pulled on."""
         return self.state is State.CONNECTED
+
+    @property
+    def acres_pulled(self) -> float:
+        """How much ground this device pulls on, in acres.
+
+        A vertical well pulls a circle around itself. The radius is a property
+        of the refuse and the vacuum, not of the well, so it is recorded rather
+        than worked out: a hundred feet in wet compacted refuse and two hundred
+        in dry, and a site that guesses gets it wrong in both directions.
+        """
+        return math.pi * self.influence**2 / SQUARE_FEET_IN_AN_ACRE
 
     @property
     def is_piped(self) -> bool:
@@ -164,4 +181,4 @@ class Device:
         return self.offline_days(on) > standard.raising_days
 
 
-__all__ = ["Device", "Kind", "State"]
+__all__ = ["SQUARE_FEET_IN_AN_ACRE", "Device", "Kind", "State"]

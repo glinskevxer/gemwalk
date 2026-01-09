@@ -1,4 +1,4 @@
--- The schema as sqlite holds it at migration 12.
+-- The schema as sqlite holds it at migration 13.
 -- Written by gemwalk.tools.schema_dump. Do not edit: add a migration.
 
 CREATE TABLE area (
@@ -10,7 +10,7 @@ CREATE TABLE area (
       last_waste   TEXT,
       closed_on    TEXT,
       cover        TEXT NOT NULL
-    );
+    , target_radius REAL NOT NULL DEFAULT 100.0);
 
 CREATE TABLE calibration (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,7 +51,7 @@ CREATE TABLE device (
       abandoned_on   TEXT,
       hov_degrees    REAL,
       hov_approved   TEXT
-    , lateral TEXT REFERENCES lateral(label));
+    , lateral TEXT REFERENCES lateral(label), influence REAL NOT NULL DEFAULT 100.0);
 
 CREATE TABLE exceedance (
       label       TEXT PRIMARY KEY,
