@@ -19,6 +19,7 @@ from gemwalk.errors import RuleError, StateError
 from gemwalk.ids import Labels
 from gemwalk.model.landfill import Cover
 from gemwalk.model.surface import Hit, Step, Walk
+from gemwalk.service.instruments import InstrumentDesk
 from gemwalk.service.sites import SiteDesk
 from gemwalk.store.book import Book
 from gemwalk.store.surface import HitRepository, WalkRepository
@@ -42,6 +43,7 @@ class SurfaceDesk:
         self.walks = WalkRepository(book)
         self.hits = HitRepository(book)
         self.sites = SiteDesk(book)
+        self.instruments = InstrumentDesk(book)
         self.labels = Labels(book)
 
     def open_walk(
@@ -56,8 +58,16 @@ class SurfaceDesk:
         wind_gust: float,
         spacing: float = 30.0,
     ) -> Walk:
-        """Start a walkover of the cover."""
+        """Start a walkover of the cover.
+
+        A detector the book knows about has to have been calibrated that day.
+        The regulation is explicit about this one: the readings off an
+        uncalibrated detector are not evidence of anything, and a walk made
+        with one has to be done again.
+        """
         self.sites.sites.get(site)
+        if self.instruments.instruments.find(instrument) is not None:
+            self.instruments.must_be_good(instrument, on)
         already = self.walks.open_walks(site)
         if already:
             names = ", ".join(w.label for w in already)

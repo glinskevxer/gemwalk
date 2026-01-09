@@ -33,6 +33,7 @@ def compliance_report(office: Office, site: str, quarter: Quarter) -> Report:
     _surface_section(office, report, site, quarter)
     _records_section(office, report, site, day)
     _work_section(office, report, site, day)
+    _instrument_section(office, report, site, day)
     _plant_section(office, report, site, quarter)
     return report
 
@@ -210,6 +211,38 @@ def _work_section(office: Office, report: Report, site: str, day: dt.date) -> No
             -ticket.days_left,
         )
     section.table(table)
+
+
+def _instrument_section(office: Office, report: Report, site: str, day: dt.date) -> None:
+    section = report.section("the instruments")
+    table = Table(
+        columns=(
+            Column("meter"),
+            Column("kind"),
+            Column("serial"),
+            Column("last calibrated", blank="never"),
+            Column("drift", Align.RIGHT, blank="-"),
+            Column("stands"),
+        ),
+        empty="no instrument on the books",
+    )
+    for meter in office.instruments.instruments.live(site):
+        standing = office.instruments.standing(meter.label, day)
+        check = standing.calibration
+        table.add(
+            meter.label,
+            str(meter.kind),
+            meter.serial,
+            None if check is None else check.day,
+            None if check is None else f"{check.drift:.1f}%",
+            "yes" if standing.is_good else "no",
+        )
+    section.table(table)
+    due = office.instruments.due(site, day)
+    if due:
+        section.say(
+            "not calibrated for the last day of the quarter: " + ", ".join(m.label for m in due)
+        )
 
 
 def _plant_section(office: Office, report: Report, site: str, quarter: Quarter) -> None:
