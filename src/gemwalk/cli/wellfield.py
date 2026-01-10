@@ -32,6 +32,7 @@ def well() -> None:
     help="what went in the ground",
 )
 @click.option("--label", default=None, help="a label off the old paper records")
+@click.option("--influence", type=float, default=None, help="how far it pulls, in feet")
 @pass_ledger
 def well_drill(
     ledger: Ledger,
@@ -44,6 +45,7 @@ def well_drill(
     on: dt.date,
     kind: str,
     label: str | None,
+    influence: float | None,
 ) -> None:
     """Put a new device in the ground."""
     made = ledger.office.wellfield.drill(
@@ -56,8 +58,12 @@ def well_drill(
         screen_bottom=screen_bottom,
         on=on,
         label=label,
+        influence=influence,
     )
-    line(f"{made.label} drilled in {made.area}, {made.screen_length:g} ft of screen")
+    line(
+        f"{made.label} drilled in {made.area}, {made.screen_length:g} ft of screen, "
+        f"pulling {made.acres_pulled:.2f} acres at {made.influence:g} ft"
+    )
 
 
 @well.command("connect")
@@ -172,6 +178,44 @@ def well_board(ledger: Ledger, site: str, on: dt.date) -> None:
     unpiped = ledger.office.piping.unpiped(site)
     if unpiped:
         line("no lateral: " + ", ".join(d.label for d in unpiped))
+
+
+@well.command("radius")
+@click.argument("area")
+@click.argument("feet", type=float)
+@pass_ledger
+def well_radius(ledger: Ledger, area: str, feet: float) -> None:
+    """Record the radius an area's collection was designed around."""
+    found = ledger.office.wellfield.set_radius(area, feet)
+    read = ledger.office.wellfield.coverage_of(area)
+    line(f"{found.label} designed at {found.target_radius:g} ft, wanting {read.wanted} devices")
+
+
+@well.command("coverage")
+@click.argument("site")
+@click.option("--on", type=DAY, required=True, help="the day to measure deadlines against")
+@pass_ledger
+def well_coverage(ledger: Ledger, site: str, on: dt.date) -> None:
+    """Say what each area has in it against what it was designed to have."""
+    desk = ledger.office.wellfield
+    rows(
+        ("area", "acres", "radius", "devices", "wanted", "covered", "short"),
+        [
+            (
+                read.area,
+                f"{read.acres:g}",
+                f"{read.radius:g}",
+                str(len(read.devices)),
+                str(read.wanted),
+                f"{read.share * 100:.0f}%",
+                str(read.short_by) if read.short_by else "",
+            )
+            for read in desk.coverage_at(site)
+        ],
+    )
+    short = desk.shortfalls(site, on)
+    for shortfall in short:
+        line(str(shortfall))
 
 
 @well.command("offline")

@@ -58,7 +58,7 @@ HD-01 laid, 18 inch HDPE SDR17
 $ gemwalk pipe lateral NORTHRIDGE HD-01 --diameter 8 --material "HDPE SDR17" --length 460 --on 2019-09-03
 LT-001 tied into HD-01
 $ gemwalk well drill NORTHRIDGE A-03 --station "N 12+40 E 3+15" --depth 92 --screen-top 22 --screen-bottom 86 --on 2021-05-12
-VW-001 drilled in A-03, 64 ft of screen
+VW-001 drilled in A-03, 64 ft of screen, pulling 0.72 acres at 100 ft
 $ gemwalk pipe tie VW-001 LT-001
 VW-001 piped to LT-001
 $ gemwalk well connect VW-001 --on 2021-06-02

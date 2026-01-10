@@ -13,7 +13,9 @@ the ground.
 from __future__ import annotations
 
 import datetime as dt
+from dataclasses import dataclass, replace
 
+from gemwalk.design import Coverage, coverage
 from gemwalk.errors import RuleError
 from gemwalk.ids import Labels
 from gemwalk.model.device import Device, Kind, State
@@ -22,6 +24,19 @@ from gemwalk.service.sites import SiteDesk
 from gemwalk.store.book import Book
 from gemwalk.store.devices import DeviceRepository
 from gemwalk.units import Temperature
+
+
+@dataclass(frozen=True)
+class Shortfall:
+    """One area that is short of devices, and how long it has to fix that."""
+
+    coverage: Coverage
+    due: dt.date
+    overdue: bool
+
+    def __str__(self) -> str:
+        when = "overdue since" if self.overdue else "due"
+        return f"{self.coverage}, {self.coverage.short_by} more {when} {self.due}"
 
 
 class WellfieldDesk:
@@ -45,6 +60,7 @@ class WellfieldDesk:
         screen_bottom: float,
         on: dt.date,
         label: str | None = None,
+        influence: float | None = None,
     ) -> Device:
         """Put a new device in the ground and hand it its permanent label."""
         found = self._area_of(site, area)
@@ -62,6 +78,7 @@ class WellfieldDesk:
                 screen_top=screen_top,
                 screen_bottom=screen_bottom,
                 drilled_on=on,
+                influence=influence if influence is not None else found.target_radius,
             )
             return self.devices.add(device)
 
@@ -102,6 +119,39 @@ class WellfieldDesk:
             )
         with self.book.writing():
             return self.devices.put(device.approve_higher_temperature(degrees, on))
+
+    def set_radius(self, area: str, radius: float) -> Area:
+        """Record the radius the area's collection was designed around."""
+        found = self.sites.areas.get(area)
+        with self.book.writing():
+            return self.sites.areas.put(replace(found, target_radius=radius))
+
+    def coverage_of(self, area: str) -> Coverage:
+        """What one area has in it against what it was designed to have."""
+        found = self.sites.areas.get(area)
+        return coverage(found, self.devices.of_area(area))
+
+    def coverage_at(self, site: str) -> list[Coverage]:
+        """Every area of a site read against its design, in label order."""
+        return [self.coverage_of(area.label) for area in self.sites.areas_of(site)]
+
+    def shortfalls(self, site: str, on: dt.date) -> list[Shortfall]:
+        """Every area short of devices, the most overdue first.
+
+        Being short is not itself a finding. It becomes one when the area is
+        also past the day collection had to be in the ground, and the two are
+        worked out from completely different things, so they have to be put
+        side by side rather than inferred from each other.
+        """
+        subpart = self.sites.standard_of(site)
+        found: list[Shortfall] = []
+        for area in self.sites.areas_of(site):
+            read = self.coverage_of(area.label)
+            if read.is_enough:
+                continue
+            due = area.install_due(subpart)
+            found.append(Shortfall(coverage=read, due=due, overdue=due < on))
+        return sorted(found, key=lambda s: (s.due, s.coverage.area))
 
     def roster(self, site: str) -> list[Device]:
         """The devices the crew is expected to read on the next run."""

@@ -63,6 +63,8 @@ def _site_section(office: Office, report: Report, site: str, day: dt.date) -> No
     overdue = office.sites.overdue_areas(site, day)
     if overdue:
         section.say("collection is past due in " + ", ".join(area.label for area in overdue))
+    for shortfall in office.wellfield.shortfalls(site, day):
+        section.say(str(shortfall))
 
 
 def _runs_section(office: Office, report: Report, site: str, runs: list[Run]) -> None:

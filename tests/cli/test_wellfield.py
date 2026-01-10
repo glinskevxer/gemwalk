@@ -210,3 +210,43 @@ def test_the_pipe_comes_out_leaves_first(cli: Shell) -> None:
         cli.ok("well", "abandon", f"VW-00{index + 1}", "--on", "2026-01-01")
     cli.ok("pipe", "pull", "LT-001", "--on", "2026-01-02")
     assert "HD-01 pulled" in cli.ok("pipe", "pull", "HD-01", "--on", "2026-01-03")
+
+
+def test_drilling_says_how_much_ground_the_device_pulls(cli: Shell) -> None:
+    open_site(cli)
+    out = cli.ok(
+        "well",
+        "drill",
+        "NORTHRIDGE",
+        "A-03",
+        "--station",
+        "N 12+40",
+        "--depth",
+        "92",
+        "--screen-top",
+        "22",
+        "--screen-bottom",
+        "86",
+        "--on",
+        "2021-05-12",
+        "--influence",
+        "150",
+    )
+    assert "pulling 1.62 acres at 150 ft" in out
+
+
+def test_a_design_radius_says_how_many_devices_the_area_wants(cli: Shell) -> None:
+    furnish(cli)
+    narrow = cli.ok("well", "radius", "A-03", "100")
+    wide = cli.ok("well", "radius", "A-03", "250")
+    assert "designed at 100 ft" in narrow
+    assert "designed at 250 ft" in wide
+    assert narrow != wide
+
+
+def test_the_coverage_table_says_what_each_area_is_short(cli: Shell) -> None:
+    furnish(cli)
+    out = cli.ok("well", "coverage", "NORTHRIDGE", "--on", "2025-04-30")
+    assert "A-03" in out
+    assert "A-04" in out
+    assert "overdue since" in out
