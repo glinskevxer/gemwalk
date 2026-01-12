@@ -18,6 +18,7 @@ from gemwalk.cli import (
     plant,
     records,
     report,
+    sheets,
     support,
     wellfield,
 )
@@ -35,6 +36,7 @@ GROUPS: dict[str, click.Group] = {
     "water": plant.water,
     "report": report.report,
     "meter": instrument.meter,
+    "export": sheets.export,
 }
 
 
