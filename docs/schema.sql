@@ -1,4 +1,4 @@
--- The schema as sqlite holds it at migration 13.
+-- The schema as sqlite holds it at migration 14.
 -- Written by gemwalk.tools.schema_dump. Do not edit: add a migration.
 
 CREATE TABLE area (
@@ -197,6 +197,22 @@ CREATE TABLE recheck (
       note        TEXT NOT NULL DEFAULT ''
     );
 
+CREATE TABLE rework (
+      label         TEXT PRIMARY KEY,
+      device        TEXT NOT NULL REFERENCES device(label),
+      site          TEXT NOT NULL REFERENCES site(label),
+      kind          TEXT NOT NULL,
+      started_on    TEXT NOT NULL,
+      finished_on   TEXT,
+      before_depth  REAL NOT NULL,
+      before_top    REAL NOT NULL,
+      before_bottom REAL NOT NULL,
+      after_depth   REAL,
+      after_top     REAL,
+      after_bottom  REAL,
+      note          TEXT NOT NULL DEFAULT ''
+    );
+
 CREATE TABLE run (
       label      TEXT PRIMARY KEY,
       site       TEXT NOT NULL REFERENCES site(label),
@@ -328,6 +344,10 @@ CREATE INDEX reading_by_run ON reading(run);
 CREATE INDEX recheck_by_exceedance ON recheck(exceedance);
 
 CREATE INDEX recheck_by_reading ON recheck(reading);
+
+CREATE INDEX rework_by_device ON rework(device);
+
+CREATE INDEX rework_by_site ON rework(site);
 
 CREATE INDEX run_by_site ON run(site);
 

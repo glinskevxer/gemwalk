@@ -435,6 +435,31 @@ M013 = Migration(
     """,
 )
 
+M014 = Migration(
+    number=14,
+    name="raises and redrills, which change what a device is",
+    script="""
+    CREATE TABLE rework (
+      label         TEXT PRIMARY KEY,
+      device        TEXT NOT NULL REFERENCES device(label),
+      site          TEXT NOT NULL REFERENCES site(label),
+      kind          TEXT NOT NULL,
+      started_on    TEXT NOT NULL,
+      finished_on   TEXT,
+      before_depth  REAL NOT NULL,
+      before_top    REAL NOT NULL,
+      before_bottom REAL NOT NULL,
+      after_depth   REAL,
+      after_top     REAL,
+      after_bottom  REAL,
+      note          TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE INDEX rework_by_device ON rework(device);
+    CREATE INDEX rework_by_site ON rework(site);
+    """,
+)
+
 MIGRATIONS: tuple[Migration, ...] = (
     M001,
     M002,
@@ -449,6 +474,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     M011,
     M012,
     M013,
+    M014,
 )
 
 
