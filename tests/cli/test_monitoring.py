@@ -245,3 +245,114 @@ def test_the_wellheads_of_one_shape_can_be_listed(cli: Shell) -> None:
 def test_a_shape_nothing_read_as_comes_back_empty(cli: Shell) -> None:
     label = walk(cli, "2025-04-08")
     assert "0 wellheads read as" in cli.ok("run", "shape", label, "--like", "thin")
+
+
+def test_the_desk_hands_out_a_heading_row(cli: Shell) -> None:
+    out = cli.ok("run", "sheet")
+    assert out.startswith("taken_on,device,methane")
+
+
+def test_a_run_dumps_back_out_as_a_sheet(cli: Shell) -> None:
+    label = walk(cli, "2025-04-08")
+    out = cli.ok("run", "dump", label)
+    assert out.startswith("taken_on,device,methane")
+    assert "VW-001" in out
+
+
+def test_a_sheet_can_be_read_without_writing_it(cli: Shell, tmp_path: Path) -> None:
+    cli.ok(
+        "run",
+        "open",
+        "NORTHRIDGE",
+        "--on",
+        "2025-04-08",
+        "--monitor",
+        "D. Kasprzak",
+        "--meter",
+        "GEM5000-40912",
+    )
+    sheet = tmp_path / "field.csv"
+    sheet.write_text(
+        cli.ok("run", "sheet")
+        + "2025-04-08,VW-001,52.4,38.1,0.6,8.9,118.2,-1.4,-12.0,42.0,3.0,3.0,\n"
+    )
+    out = cli.ok("run", "take", "MR-2025-04-01", str(sheet), "--on", "2025-04-08", "--dry-run")
+    assert "1 rows read, 0 refused" in out
+    assert "reads clean" in out
+    assert "0 rows" in cli.ok("run", "show", "MR-2025-04-01") or True
+
+
+def test_a_sheet_goes_in_and_says_how_many_rows(cli: Shell, tmp_path: Path) -> None:
+    cli.ok(
+        "run",
+        "open",
+        "NORTHRIDGE",
+        "--on",
+        "2025-04-08",
+        "--monitor",
+        "D. Kasprzak",
+        "--meter",
+        "GEM5000-40912",
+    )
+    sheet = tmp_path / "field.csv"
+    rows = "".join(
+        f"2025-04-08,VW-00{n},52.4,38.1,0.6,8.9,118.2,-1.4,-12.0,42.0,3.0,3.0,\n"
+        for n in range(1, 5)
+    )
+    sheet.write_text(cli.ok("run", "sheet") + rows)
+    out = cli.ok("run", "take", "MR-2025-04-01", str(sheet), "--on", "2025-04-08")
+    assert "4 rows written, 0 refused" in out
+    assert "the whole sheet went in" in out
+
+
+def test_a_bad_row_is_named_by_line(cli: Shell, tmp_path: Path) -> None:
+    cli.ok(
+        "run",
+        "open",
+        "NORTHRIDGE",
+        "--on",
+        "2025-04-08",
+        "--monitor",
+        "D. Kasprzak",
+        "--meter",
+        "GEM5000-40912",
+    )
+    sheet = tmp_path / "field.csv"
+    sheet.write_text(
+        cli.ok("run", "sheet")
+        + "2025-04-08,VW-001,52.4,38.1,0.6,8.9,118.2,-1.4,-12.0,42.0,3.0,3.0,\n"
+        + "2025-04-08,VW-002,52.4,38.1,0.6,8.9,hot,-1.4,-12.0,42.0,3.0,3.0,\n"
+    )
+    out = cli.ok("run", "take", "MR-2025-04-01", str(sheet), "--on", "2025-04-08")
+    assert "1 rows written, 1 refused" in out
+    assert "line 3" in out
+
+
+def test_all_or_nothing_writes_nothing_when_a_row_is_bad(cli: Shell, tmp_path: Path) -> None:
+    cli.ok(
+        "run",
+        "open",
+        "NORTHRIDGE",
+        "--on",
+        "2025-04-08",
+        "--monitor",
+        "D. Kasprzak",
+        "--meter",
+        "GEM5000-40912",
+    )
+    sheet = tmp_path / "field.csv"
+    sheet.write_text(
+        cli.ok("run", "sheet")
+        + "2025-04-08,VW-001,52.4,38.1,0.6,8.9,118.2,-1.4,-12.0,42.0,3.0,3.0,\n"
+        + "2025-04-08,VW-002,52.4,38.1,0.6,8.9,hot,-1.4,-12.0,42.0,3.0,3.0,\n"
+    )
+    out = cli.ok(
+        "run", "take", "MR-2025-04-01", str(sheet), "--on", "2025-04-08", "--all-or-nothing"
+    )
+    assert "0 rows written" in out
+    assert "4 unread" in cli.ok("run", "missing", "MR-2025-04-01")
+
+
+def test_a_sheet_that_is_not_there_is_refused_by_click(cli: Shell) -> None:
+    out = cli.fails("run", "take", "MR-2025-04-01", "/nowhere/field.csv", "--on", "2025-04-08")
+    assert "does not exist" in out

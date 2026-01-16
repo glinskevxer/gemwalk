@@ -17,6 +17,7 @@ from types import TracebackType
 
 from gemwalk.service.compliance import ComplianceDesk
 from gemwalk.service.instruments import InstrumentDesk
+from gemwalk.service.intake import IntakeDesk
 from gemwalk.service.liquids import LiquidsDesk
 from gemwalk.service.monitoring import MonitoringDesk
 from gemwalk.service.piping import PipingDesk
@@ -39,6 +40,7 @@ class Office:
         self.instruments = InstrumentDesk(book)
         self.piping = PipingDesk(book)
         self.monitoring = MonitoringDesk(book)
+        self.intake = IntakeDesk(book)
         self.compliance = ComplianceDesk(book)
         self.surface = SurfaceDesk(book)
         self.plant = PlantDesk(book)

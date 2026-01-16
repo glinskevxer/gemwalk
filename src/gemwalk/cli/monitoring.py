@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+from pathlib import Path
 
 import click
 
@@ -143,6 +144,55 @@ def run_show(ledger: Ledger, label: str) -> None:
             )
         )
     rows(("well", "CH4", "O2", "bal", "temp", "gauge", "flow", "over"), body)
+
+
+@run.command("sheet")
+@pass_ledger
+def run_sheet(ledger: Ledger) -> None:
+    """Print the heading row a crew can start a field sheet from."""
+    click.echo(ledger.office.intake.sample(), nl=False)
+
+
+@run.command("dump")
+@click.argument("label")
+@pass_ledger
+def run_dump(ledger: Ledger, label: str) -> None:
+    """Print a run back out as a field sheet, which is how one gets corrected."""
+    readings = ledger.office.monitoring.readings.of_run(label)
+    click.echo(ledger.office.intake.as_rows(readings), nl=False)
+
+
+@run.command("take")
+@click.argument("label")
+@click.argument("sheet", type=click.Path(exists=True, dir_okay=False, path_type=Path))
+@click.option("--on", type=DAY, required=True, help="the day a row with no date belongs to")
+@click.option("--dry-run", is_flag=True, help="read the sheet without writing any of it")
+@click.option("--all-or-nothing", is_flag=True, help="write the whole sheet or none of it")
+@pass_ledger
+def run_take(
+    ledger: Ledger,
+    label: str,
+    sheet: Path,
+    on: dt.date,
+    dry_run: bool,
+    all_or_nothing: bool,
+) -> None:
+    """Take a field sheet in off a spreadsheet."""
+    text = sheet.read_text()
+    if dry_run:
+        read = ledger.office.intake.preview(text)
+        line(f"{len(read.rows)} rows read, {len(read.refused)} refused")
+        for refusal in read.refused:
+            line(f"  {refusal}")
+        if read.is_clean:
+            line("the sheet reads clean")
+        return
+    taken = ledger.office.intake.take(label, text, on=on, all_or_nothing=all_or_nothing)
+    line(f"{len(taken.recorded)} rows written, {len(taken.refused)} refused")
+    for refusal in taken.refused:
+        line(f"  {refusal}")
+    if taken.is_clean:
+        line("the whole sheet went in")
 
 
 @run.command("quality")

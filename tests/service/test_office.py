@@ -28,6 +28,7 @@ def test_every_desk_is_on_the_same_book(office: Office) -> None:
         office.sites,
         office.wellfield,
         office.instruments,
+        office.intake,
         office.piping,
         office.monitoring,
         office.compliance,
