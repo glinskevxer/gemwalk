@@ -78,6 +78,7 @@ SERIES: dict[str, Series] = {
     "order": Series("order", "WO", 4, Scope.YEAR),
     "outage": Series("outage", "OT", 3, Scope.YEAR),
     "sump": Series("sump", "CS", 3, Scope.FOREVER),
+    "rework": Series("rework", "RW", 3, Scope.YEAR),
 }
 
 

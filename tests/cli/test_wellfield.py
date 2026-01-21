@@ -250,3 +250,68 @@ def test_the_coverage_table_says_what_each_area_is_short(cli: Shell) -> None:
     assert "A-03" in out
     assert "A-04" in out
     assert "overdue since" in out
+
+
+def test_starting_work_says_how_long_it_has(cli: Shell) -> None:
+    furnish(cli)
+    out = cli.ok("well", "start", "VW-001", "--kind", "raise", "--on", "2025-03-01")
+    assert "RW-2025-001" in out
+    assert "off the run, back within 60 days" in out
+
+
+def test_finishing_a_raise_says_how_much_taller_it_came_back(cli: Shell) -> None:
+    furnish(cli)
+    cli.ok("well", "start", "VW-001", "--kind", "raise", "--on", "2025-03-01")
+    out = cli.ok(
+        "well",
+        "finish",
+        "RW-2025-001",
+        "--on",
+        "2025-03-20",
+        "--depth",
+        "122",
+        "--screen-top",
+        "52",
+        "--screen-bottom",
+        "116",
+    )
+    assert "came back 30 ft taller" in out
+    assert "is connected after 19 days" in out
+
+
+def test_a_site_with_nothing_open_says_so(cli: Shell) -> None:
+    furnish(cli)
+    assert "no device has work open" in cli.ok("well", "work", "NORTHRIDGE", "--on", "2025-03-10")
+
+
+def test_work_past_the_window_is_flagged(cli: Shell) -> None:
+    furnish(cli)
+    cli.ok("well", "start", "VW-001", "--kind", "raise", "--on", "2025-03-01")
+    out = cli.ok("well", "work", "NORTHRIDGE", "--on", "2025-05-10")
+    assert "past the window" in out
+
+
+def test_a_device_nothing_was_done_to_has_no_history(cli: Shell) -> None:
+    furnish(cli)
+    assert "nothing has ever been done" in cli.ok("well", "rework", "VW-002")
+
+
+def test_the_history_carries_both_measurements(cli: Shell) -> None:
+    furnish(cli)
+    cli.ok("well", "start", "VW-001", "--kind", "raise", "--on", "2025-03-01")
+    cli.ok(
+        "well",
+        "finish",
+        "RW-2025-001",
+        "--on",
+        "2025-03-20",
+        "--depth",
+        "122",
+        "--screen-top",
+        "52",
+        "--screen-bottom",
+        "116",
+    )
+    out = cli.ok("well", "rework", "VW-001")
+    assert "92/22-86" in out
+    assert "122/52-116" in out

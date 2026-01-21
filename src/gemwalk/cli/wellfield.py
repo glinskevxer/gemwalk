@@ -9,6 +9,7 @@ import click
 from gemwalk.cli.support import DAY, Ledger, line, pass_ledger, rows
 from gemwalk.model.device import Kind, State
 from gemwalk.model.piping import MATERIALS
+from gemwalk.model.rework import Rework
 from gemwalk.units import Temperature
 
 
@@ -178,6 +179,110 @@ def well_board(ledger: Ledger, site: str, on: dt.date) -> None:
     unpiped = ledger.office.piping.unpiped(site)
     if unpiped:
         line("no lateral: " + ", ".join(d.label for d in unpiped))
+
+
+@well.command("start")
+@click.argument("device")
+@click.option(
+    "--kind",
+    type=click.Choice([k.value for k in Rework]),
+    required=True,
+    help="what is being done to it",
+)
+@click.option("--on", type=DAY, required=True, help="the day the work started")
+@click.option("--note", default="", help="anything worth writing down")
+@pass_ledger
+def well_start(ledger: Ledger, device: str, kind: str, on: dt.date, note: str) -> None:
+    """Start work on a device, which takes it off the run while it goes on."""
+    job = ledger.office.wellfield.start_rework(device, Rework(kind), on, note=note)
+    subpart = ledger.office.sites.standard_of(job.site)
+    line(f"{job.label} open on {job.device}, off the run, back within {subpart.raising_days} days")
+
+
+@well.command("finish")
+@click.argument("label")
+@click.option("--on", type=DAY, required=True, help="the day the work finished")
+@click.option("--depth", type=float, default=None, help="the new total depth")
+@click.option("--screen-top", type=float, default=None, help="the new top of screen")
+@click.option("--screen-bottom", type=float, default=None, help="the new bottom of screen")
+@click.option("--note", default="", help="what was actually done")
+@pass_ledger
+def well_finish(
+    ledger: Ledger,
+    label: str,
+    on: dt.date,
+    depth: float | None,
+    screen_top: float | None,
+    screen_bottom: float | None,
+    note: str,
+) -> None:
+    """Finish the work, remeasure the device, and put it back on the run."""
+    job = ledger.office.wellfield.finish_rework(
+        label, on, depth=depth, screen_top=screen_top, screen_bottom=screen_bottom, note=note
+    )
+    after = ledger.office.wellfield.devices.get(job.device)
+    if job.raised_by:
+        line(
+            f"{job.device} came back {job.raised_by:g} ft taller, "
+            f"screen {after.screen_top:g} to {after.screen_bottom:g} ft"
+        )
+    line(f"{job.device} is {after.state} after {job.days(on)} days")
+
+
+@well.command("work")
+@click.argument("site")
+@click.option("--on", type=DAY, required=True, help="the day to measure against")
+@pass_ledger
+def well_work(ledger: Ledger, site: str, on: dt.date) -> None:
+    """List the devices with work open on them."""
+    desk = ledger.office.wellfield
+    jobs = desk.open_rework(site)
+    if not jobs:
+        line("no device has work open on it")
+        return
+    late = {job.label for job in desk.overdue_rework(site, on)}
+    rows(
+        ("job", "device", "kind", "started", "days", ""),
+        [
+            (
+                job.label,
+                job.device,
+                str(job.kind),
+                str(job.started_on),
+                str(job.days(on)),
+                "past the window" if job.label in late else "",
+            )
+            for job in jobs
+        ],
+    )
+
+
+@well.command("rework")
+@click.argument("device")
+@pass_ledger
+def well_rework(ledger: Ledger, device: str) -> None:
+    """List every piece of work ever done on one device."""
+    history = ledger.office.wellfield.rework_history(device)
+    if not history:
+        line(f"nothing has ever been done to {device}")
+        return
+    rows(
+        ("job", "kind", "started", "finished", "before", "after", "note"),
+        [
+            (
+                job.label,
+                str(job.kind),
+                str(job.started_on),
+                str(job.finished_on or "open"),
+                f"{job.before_depth:g}/{job.before_top:g}-{job.before_bottom:g}",
+                "-"
+                if job.after_depth is None
+                else f"{job.after_depth:g}/{job.after_top:g}-{job.after_bottom:g}",
+                job.note,
+            )
+            for job in history
+        ],
+    )
 
 
 @well.command("radius")

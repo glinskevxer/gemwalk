@@ -16,13 +16,15 @@ import datetime as dt
 from dataclasses import dataclass, replace
 
 from gemwalk.design import Coverage, coverage
-from gemwalk.errors import RuleError
+from gemwalk.errors import RuleError, StateError
 from gemwalk.ids import Labels
 from gemwalk.model.device import Device, Kind, State
 from gemwalk.model.landfill import Area
+from gemwalk.model.rework import Job, Rework
 from gemwalk.service.sites import SiteDesk
 from gemwalk.store.book import Book
 from gemwalk.store.devices import DeviceRepository
+from gemwalk.store.rework import ReworkRepository
 from gemwalk.units import Temperature
 
 
@@ -45,6 +47,7 @@ class WellfieldDesk:
     def __init__(self, book: Book) -> None:
         self.book = book
         self.devices = DeviceRepository(book)
+        self.rework = ReworkRepository(book)
         self.sites = SiteDesk(book)
         self.labels = Labels(book)
 
@@ -119,6 +122,68 @@ class WellfieldDesk:
             )
         with self.book.writing():
             return self.devices.put(device.approve_higher_temperature(degrees, on))
+
+    def start_rework(self, device: str, kind: Rework, on: dt.date, *, note: str = "") -> Job:
+        """Start work on a device, which takes it off the run while it goes on.
+
+        Taking it off the run is not a separate decision. A well being raised
+        is not being read, and a well that is not being read has to be off the
+        roster or the run cannot be closed. Doing the two together is what
+        stops a raise from quietly making every run short.
+        """
+        found = self.devices.get(device)
+        if found.state is State.ABANDONED:
+            raise StateError(device, "abandoned", "in service")
+        if self.rework.open_on(device) is not None:
+            raise RuleError("rework", f"{device} already has work open on it")
+        with self.book.writing():
+            job = Job.opened(self.labels.next("rework", on), found, kind, on, note)
+            self.rework.add(job)
+            if found.state is State.CONNECTED:
+                self.devices.put(found.take_offline(on))
+            return job
+
+    def finish_rework(
+        self,
+        label: str,
+        on: dt.date,
+        *,
+        depth: float | None = None,
+        screen_top: float | None = None,
+        screen_bottom: float | None = None,
+        note: str = "",
+    ) -> Job:
+        """Finish the work, remeasure the device, and put it back on the run."""
+        job = self.rework.get(label)
+        device = self.devices.get(job.device)
+        with self.book.writing():
+            finished = job.finish(
+                on,
+                depth=depth,
+                screen_top=screen_top,
+                screen_bottom=screen_bottom,
+                note=note,
+            )
+            self.rework.put(finished)
+            after = finished.apply(device)
+            if after.state is State.OFFLINE:
+                after = after.put_online(on)
+            self.devices.put(after)
+            return finished
+
+    def open_rework(self, site: str) -> list[Job]:
+        """Every piece of work at a site that is still going on."""
+        return self.rework.open_at(site)
+
+    def overdue_rework(self, site: str, on: dt.date) -> list[Job]:
+        """Every piece of work that has run past the window a raise allows."""
+        subpart = self.sites.standard_of(site)
+        return [job for job in self.rework.open_at(site) if job.over_window(subpart, on)]
+
+    def rework_history(self, device: str) -> list[Job]:
+        """Every piece of work on one device, oldest first."""
+        self.devices.get(device)
+        return self.rework.of_device(device)
 
     def set_radius(self, area: str, radius: float) -> Area:
         """Record the radius the area's collection was designed around."""
