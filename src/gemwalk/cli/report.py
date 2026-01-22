@@ -9,6 +9,7 @@ import click
 from gemwalk.cli.support import DAY, Ledger, line, pass_ledger, show
 from gemwalk.clock import Month, Quarter
 from gemwalk.nmoc import Inputs, needed, rate
+from gemwalk.report.annual import annual_report
 from gemwalk.report.compliance import compliance_report
 from gemwalk.report.device import device_report
 from gemwalk.report.monthly import monthly_report
@@ -36,6 +37,15 @@ def report_month(ledger: Ledger, site: str, month: str, on: dt.date | None) -> N
 def report_quarter(ledger: Ledger, site: str, quarter: str) -> None:
     """Print the quarterly compliance report."""
     show(compliance_report(ledger.office, site, Quarter.parse(quarter)))
+
+
+@report.command("year")
+@click.argument("site")
+@click.argument("year", type=int)
+@pass_ledger
+def report_year(ledger: Ledger, site: str, year: int) -> None:
+    """Print the annual report."""
+    show(annual_report(ledger.office, site, year))
 
 
 @report.command("device")

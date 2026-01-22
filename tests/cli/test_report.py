@@ -123,3 +123,15 @@ def test_the_well_card_prints(cli: Shell) -> None:
 
 def test_a_device_the_book_never_issued_is_refused(cli: Shell) -> None:
     assert "VW-999" in cli.fails("report", "device", "VW-999")
+
+
+def test_the_annual_report_prints(cli: Shell) -> None:
+    walk(cli, "2025-04-08")
+    out = cli.ok("report", "year", "NORTHRIDGE", "2025")
+    assert "annual report" in out
+    assert "the year" in out
+    assert "1 monitoring runs, 4 wellhead readings" in out
+
+
+def test_a_year_that_is_not_a_number_is_refused(cli: Shell) -> None:
+    assert "not a valid integer" in cli.fails("report", "year", "NORTHRIDGE", "last")
