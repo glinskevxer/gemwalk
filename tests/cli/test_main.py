@@ -98,3 +98,27 @@ def test_the_console_script_returns_one_on_a_refusal(
 ) -> None:
     monkeypatch.setattr("sys.argv", ["gemwalk", "badger"])
     assert run() != 0
+
+
+def test_seeding_fills_the_book(runner: CliRunner, tmp_path: Path) -> None:
+    book = tmp_path / "northridge.sqlite3"
+    result = invoke(runner, book, "store", "seed")
+    assert result.exit_code == 0
+    assert "seeded" in result.output
+    assert "device" in result.output
+
+
+def test_seeding_twice_is_refused_without_force(runner: CliRunner, tmp_path: Path) -> None:
+    book = tmp_path / "northridge.sqlite3"
+    invoke(runner, book, "store", "seed")
+    result = invoke(runner, book, "store", "seed")
+    assert result.exit_code != 0
+    assert "already has a site" in result.output
+
+
+def test_a_seeded_book_prints_its_reports(runner: CliRunner, tmp_path: Path) -> None:
+    book = tmp_path / "northridge.sqlite3"
+    invoke(runner, book, "store", "seed")
+    result = invoke(runner, book, "report", "year", "NORTHRIDGE", "2025")
+    assert result.exit_code == 0
+    assert "6 monitoring runs" in result.output

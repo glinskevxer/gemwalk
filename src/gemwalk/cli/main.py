@@ -18,6 +18,7 @@ from gemwalk.cli.sheets import export
 from gemwalk.cli.support import DeskGroup, Ledger, line, pass_ledger, rows
 from gemwalk.cli.wellfield import pipe, well
 from gemwalk.errors import GemwalkError
+from gemwalk.service.seed import seed
 from gemwalk.store.migrations import MIGRATIONS, pending, version
 
 DEFAULT_BOOK = "gemwalk.sqlite3"
@@ -71,6 +72,19 @@ def store_check(ledger: Ledger) -> None:
         names = ", ".join(str(m.number) for m in owed)
         raise click.ClickException(f"the book is missing migrations {names}")
     line(f"schema {version(office.book)}, nothing owed")
+
+
+@store.command("seed")
+@click.option("--force", is_flag=True, help="seed a book that already has a site in it")
+@pass_ledger
+def store_seed(ledger: Ledger, force: bool) -> None:
+    """Fill the book with a year of a plausible site, so it can be looked at."""
+    office = ledger.office
+    if office.counts().get("site", 0) and not force:
+        raise click.ClickException("this book already has a site in it, pass --force")
+    counts = seed(office)
+    line(f"seeded {ledger.path}")
+    rows(("table", "rows"), [(name, str(count)) for name, count in counts.items() if count])
 
 
 @main.command()

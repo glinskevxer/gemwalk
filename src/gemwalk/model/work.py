@@ -71,8 +71,6 @@ class WorkOrder:
     def __post_init__(self) -> None:
         if not self.target.strip():
             raise RuleError("work order", "an order names a place")
-        if self.due_on < self.raised_on:
-            raise OrderError("work order", str(self.raised_on), str(self.due_on))
         if self.done_on is not None and self.state not in CLOSED:
             raise RuleError("work order", "an order with a finish date is closed")
         if self.state is Standing.ASSIGNED and not self.crew.strip():
@@ -85,8 +83,19 @@ class WorkOrder:
 
     @property
     def days_allowed(self) -> int:
-        """How many days the order was given when it was raised."""
+        """How many days the order was given when it was raised.
+
+        This can be negative, and a negative one is not a mistake. An order
+        raised off a record whose hundred and twenty day window shut in May is
+        written in June with a date in May, because the date belongs to the
+        record and writing the ticket later does not move it.
+        """
         return (self.due_on - self.raised_on).days
+
+    @property
+    def born_late(self) -> bool:
+        """True when the order was already past its date the day it was written."""
+        return self.due_on < self.raised_on
 
     def days_left(self, on: dt.date) -> int | None:
         """How many days are left, negative when late, nothing when closed."""

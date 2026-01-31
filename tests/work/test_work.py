@@ -32,9 +32,12 @@ def test_a_new_order_is_open_and_carries_its_window() -> None:
     assert order.days_left(dt.date(2025, 4, 10)) == 3
 
 
-def test_an_order_cannot_be_due_before_it_was_raised() -> None:
-    with pytest.raises(OrderError):
-        an_order(due_on=dt.date(2025, 4, 1))
+def test_an_order_written_after_its_date_was_born_late() -> None:
+    late = an_order(due_on=dt.date(2025, 4, 1))
+    assert late.born_late
+    assert late.days_allowed == -7
+    assert late.is_late(RAISED)
+    assert not an_order().born_late
 
 
 def test_an_order_names_a_place() -> None:

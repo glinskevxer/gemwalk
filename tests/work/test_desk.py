@@ -217,3 +217,18 @@ def test_orders_finished_after_their_date_are_listed(desk: WorkDesk) -> None:
     desk.finish(order, dt.date(2025, 4, 20))
     late = desk.finished_late("NORTHRIDGE", dt.date(2025, 4, 1), dt.date(2025, 4, 30))
     assert [o.label for o in late] == [order]
+
+
+def test_a_date_before_the_day_the_order_was_written_is_refused(desk: WorkDesk) -> None:
+    from gemwalk.errors import OrderError
+
+    with pytest.raises(OrderError):
+        desk.raise_order("NORTHRIDGE", Job.VALVE, "VW-001", on=APRIL, due=dt.date(2025, 4, 1))
+
+
+def test_an_order_off_a_record_may_already_be_past_its_date(desk: WorkDesk) -> None:
+    record = an_exceedance(desk)
+    desk.compliance.catch_up("NORTHRIDGE", dt.date(2025, 9, 1))
+    order = desk.raise_for_exceedance(record, Job.VALVE, dt.date(2025, 9, 2))
+    assert order.born_late
+    assert order.due_on == dt.date(2025, 8, 6)

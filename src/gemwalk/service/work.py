@@ -16,7 +16,7 @@ from __future__ import annotations
 import datetime as dt
 from dataclasses import dataclass
 
-from gemwalk.errors import RuleError
+from gemwalk.errors import OrderError, RuleError
 from gemwalk.ids import Labels
 from gemwalk.model.work import Job, Standing, WorkOrder
 from gemwalk.service.compliance import ComplianceDesk
@@ -56,9 +56,18 @@ class WorkDesk:
         due: dt.date,
         because: str | None = None,
         note: str = "",
+        allow_past: bool = False,
     ) -> WorkOrder:
-        """Write a job the desk decided on, with the date the desk chose."""
+        """Write a job the desk decided on, with the date the desk chose.
+
+        A date before the day the order is written is refused unless the caller
+        says otherwise, because a person typing both dates has almost certainly
+        got one of them wrong. An order raised off a record is the exception:
+        there the date is the record's and may already have gone by.
+        """
         self.sites.sites.get(site)
+        if due < on and not allow_past:
+            raise OrderError("work order", str(on), str(due))
         with self.book.writing():
             order = WorkOrder(
                 label=self.labels.next("order", on),
@@ -89,6 +98,7 @@ class WorkDesk:
             due=due,
             because=label,
             note=note,
+            allow_past=True,
         )
 
     def raise_for_hit(self, label: str, job: Job, on: dt.date, note: str = "") -> WorkOrder:
@@ -101,7 +111,14 @@ class WorkDesk:
         if due is None:
             raise RuleError("work order", f"{label} has no window left")
         return self.raise_order(
-            hit.site, job, hit.station, on=on, due=due, because=label, note=note
+            hit.site,
+            job,
+            hit.station,
+            on=on,
+            due=due,
+            because=label,
+            note=note,
+            allow_past=True,
         )
 
     def assign(self, label: str, crew: str, on: dt.date) -> WorkOrder:
