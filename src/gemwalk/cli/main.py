@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 import click
 
@@ -19,6 +20,7 @@ from gemwalk.cli.support import DeskGroup, Ledger, line, pass_ledger, rows
 from gemwalk.cli.wellfield import pipe, well
 from gemwalk.errors import GemwalkError
 from gemwalk.service.seed import seed
+from gemwalk.store.maintenance import copy_to, health, row_counts, tidy
 from gemwalk.store.migrations import MIGRATIONS, pending, version
 
 DEFAULT_BOOK = "gemwalk.sqlite3"
@@ -72,6 +74,46 @@ def store_check(ledger: Ledger) -> None:
         names = ", ".join(str(m.number) for m in owed)
         raise click.ClickException(f"the book is missing migrations {names}")
     line(f"schema {version(office.book)}, nothing owed")
+
+
+@store.command("verify")
+@pass_ledger
+def store_verify(ledger: Ledger) -> None:
+    """Read the book for damage and for records that point at nothing."""
+    found = health(ledger.office.book)
+    line(str(found))
+    for said in found.damage:
+        line(f"  {said}")
+    for orphan in found.orphans:
+        line(f"  {orphan}")
+    if not found.is_sound:
+        raise click.ClickException("the book is not sound")
+
+
+@store.command("tidy")
+@pass_ledger
+def store_tidy(ledger: Ledger) -> None:
+    """Rebuild the file to reclaim space and refresh the query planner."""
+    before = health(ledger.office.book)
+    after = tidy(ledger.office.book)
+    line(f"{before.bytes:,} bytes before, {after.bytes:,} after")
+
+
+@store.command("backup")
+@click.argument("target", type=click.Path(dir_okay=False, path_type=Path))
+@pass_ledger
+def store_backup(ledger: Ledger, target: Path) -> None:
+    """Take a consistent copy of the book, whatever is going on in it."""
+    written = copy_to(ledger.office.book, target)
+    line(f"{ledger.path} copied to {written}")
+
+
+@store.command("rows")
+@pass_ledger
+def store_rows(ledger: Ledger) -> None:
+    """Say how many rows are in each table, biggest first."""
+    counts = row_counts(ledger.office.book)
+    rows(("table", "rows"), [(name, str(count)) for name, count in counts.items()])
 
 
 @store.command("seed")

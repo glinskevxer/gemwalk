@@ -122,3 +122,38 @@ def test_a_seeded_book_prints_its_reports(runner: CliRunner, tmp_path: Path) -> 
     result = invoke(runner, book, "report", "year", "NORTHRIDGE", "2025")
     assert result.exit_code == 0
     assert "6 monitoring runs" in result.output
+
+
+def test_verify_says_a_fresh_book_is_sound(runner: CliRunner, tmp_path: Path) -> None:
+    book = tmp_path / "northridge.sqlite3"
+    invoke(runner, book, "store", "init")
+    result = invoke(runner, book, "store", "verify")
+    assert result.exit_code == 0
+    assert "sound" in result.output
+
+
+def test_tidy_says_how_big_the_book_was_and_is(runner: CliRunner, tmp_path: Path) -> None:
+    book = tmp_path / "northridge.sqlite3"
+    invoke(runner, book, "store", "seed")
+    result = invoke(runner, book, "store", "tidy")
+    assert result.exit_code == 0
+    assert "bytes before" in result.output
+
+
+def test_a_backup_is_a_whole_book(runner: CliRunner, tmp_path: Path) -> None:
+    book = tmp_path / "northridge.sqlite3"
+    invoke(runner, book, "store", "seed")
+    target = tmp_path / "copy.sqlite3"
+    result = invoke(runner, book, "store", "backup", str(target))
+    assert result.exit_code == 0
+    assert target.exists()
+    again = runner.invoke(main, ["--book", str(target), "store", "rows"])
+    assert "reading" in again.output
+
+
+def test_rows_comes_back_biggest_first(runner: CliRunner, tmp_path: Path) -> None:
+    book = tmp_path / "northridge.sqlite3"
+    invoke(runner, book, "store", "seed")
+    result = invoke(runner, book, "store", "rows")
+    assert result.exit_code == 0
+    assert result.output.index("reading") < result.output.index("site")

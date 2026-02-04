@@ -174,6 +174,19 @@ class Book:
         """True while a :meth:`writing` block is open."""
         return self._depth > 0
 
+    def backup(self, path: str | Path) -> Path:
+        """Copy the whole book to *path*, safely, while it is open.
+
+        Copying the file with the filesystem is not the same thing. A book in
+        write ahead logging mode keeps recent work in a second file, so a
+        filesystem copy of the main one is a copy of the book as it was at some
+        moment nobody chose. Sqlite's own backup takes a consistent one.
+        """
+        target = Path(path)
+        with sqlite3.connect(target) as other:
+            self._live().backup(other)
+        return target
+
     def close(self) -> None:
         """Shut the book. Closing twice is not an error."""
         if not self._closed:
