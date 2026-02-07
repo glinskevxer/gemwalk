@@ -11,27 +11,16 @@ from gemwalk.errors import DuplicateError
 from gemwalk.model.landfill import Cover
 from gemwalk.model.surface import Hit, Step, Walk
 from gemwalk.rules import XXX
-from gemwalk.service.sites import SiteDesk
 from gemwalk.store.book import Book
 from gemwalk.store.surface import HitRepository, WalkRepository
+from tests.support import bare
 
 STARTED = dt.date(2025, 5, 13)
 
 
 @pytest.fixture
 def store(book: Book) -> tuple[WalkRepository, HitRepository]:
-    sites = SiteDesk(book)
-    sites.open_site(
-        "NORTHRIDGE",
-        "Northridge",
-        subpart="XXX",
-        permit="MSW-1188-04",
-        zone="America/Chicago",
-        design_capacity=8_400_000.0,
-        opened_on=dt.date(1998, 6, 1),
-    )
-    sites.add_area("A-03", "NORTHRIDGE", "phase 3", acres=12.4, first_waste=dt.date(2019, 4, 15))
-    sites.add_area("A-04", "NORTHRIDGE", "phase 4", acres=8.0, first_waste=dt.date(2023, 6, 1))
+    bare(book)
     walks = WalkRepository(book)
     walks.add(a_walk())
     return walks, HitRepository(book)

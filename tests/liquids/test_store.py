@@ -9,39 +9,16 @@ import pytest
 from gemwalk.clock import read_moment
 from gemwalk.errors import DuplicateError
 from gemwalk.model.liquids import Level, Pumpout, Sump, SumpKind
-from gemwalk.service.sites import SiteDesk
-from gemwalk.service.wellfield import WellfieldDesk
 from gemwalk.store.book import Book
 from gemwalk.store.liquids import LevelRepository, PumpoutRepository, SumpRepository
+from tests.support import ZONE, bare, sink
 
-ZONE = "America/Chicago"
 JUNE = dt.date(2025, 6, 3)
 
 
 @pytest.fixture
 def store(book: Book) -> tuple[SumpRepository, LevelRepository, PumpoutRepository]:
-    sites = SiteDesk(book)
-    sites.open_site(
-        "NORTHRIDGE",
-        "Northridge",
-        subpart="XXX",
-        permit="MSW-1188-04",
-        zone=ZONE,
-        design_capacity=8_400_000.0,
-        opened_on=dt.date(1998, 6, 1),
-    )
-    sites.add_area("A-03", "NORTHRIDGE", "phase 3", acres=12.4, first_waste=dt.date(2019, 4, 15))
-    wells = WellfieldDesk(book)
-    for _ in range(2):
-        wells.drill(
-            "NORTHRIDGE",
-            "A-03",
-            station="N 12+40",
-            total_depth=92.0,
-            screen_top=22.0,
-            screen_bottom=86.0,
-            on=dt.date(2021, 5, 12),
-        )
+    sink(bare(book), 2, connect=False)
     sumps = SumpRepository(book)
     sumps.add(a_sump())
     return sumps, LevelRepository(book), PumpoutRepository(book)

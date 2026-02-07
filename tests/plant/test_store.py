@@ -9,7 +9,6 @@ import pytest
 from gemwalk.clock import read_moment
 from gemwalk.errors import DuplicateError
 from gemwalk.model.plant import Control, ControlKind, Operation, Outage
-from gemwalk.service.sites import SiteDesk
 from gemwalk.store.book import Book
 from gemwalk.store.plant import (
     ControlRepository,
@@ -18,22 +17,12 @@ from gemwalk.store.plant import (
     stamp,
     unstamp,
 )
-
-ZONE = "America/Chicago"
+from tests.support import ZONE, bare
 
 
 @pytest.fixture
 def store(book: Book) -> tuple[ControlRepository, OperationRepository, OutageRepository]:
-    sites = SiteDesk(book)
-    sites.open_site(
-        "NORTHRIDGE",
-        "Northridge",
-        subpart="XXX",
-        permit="MSW-1188-04",
-        zone=ZONE,
-        design_capacity=8_400_000.0,
-        opened_on=dt.date(1998, 6, 1),
-    )
+    bare(book, areas=False)
     controls = ControlRepository(book)
     controls.add(a_control())
     return controls, OperationRepository(book), OutageRepository(book)

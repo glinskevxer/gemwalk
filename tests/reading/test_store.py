@@ -7,12 +7,10 @@ import datetime as dt
 import pytest
 
 from gemwalk.errors import DuplicateError, UnknownError
-from gemwalk.model.device import Kind
 from gemwalk.model.reading import Reading, Run
-from gemwalk.service.sites import SiteDesk
-from gemwalk.service.wellfield import WellfieldDesk
 from gemwalk.store.book import Book
 from gemwalk.store.readings import ReadingRepository, RunRepository
+from tests.support import bare, sink
 
 APRIL = dt.date(2025, 4, 8)
 MAY = dt.date(2025, 5, 6)
@@ -20,29 +18,7 @@ MAY = dt.date(2025, 5, 6)
 
 @pytest.fixture
 def store(book: Book) -> tuple[RunRepository, ReadingRepository]:
-    sites = SiteDesk(book)
-    sites.open_site(
-        "NORTHRIDGE",
-        "Northridge",
-        subpart="XXX",
-        permit="MSW-1188-04",
-        zone="America/Chicago",
-        design_capacity=8_400_000.0,
-        opened_on=dt.date(1998, 6, 1),
-    )
-    sites.add_area("A-03", "NORTHRIDGE", "phase 3", acres=12.4, first_waste=dt.date(2019, 4, 15))
-    wells = WellfieldDesk(book)
-    for _ in range(2):
-        wells.drill(
-            "NORTHRIDGE",
-            "A-03",
-            kind=Kind.VERTICAL,
-            station="N 12+40",
-            total_depth=92.0,
-            screen_top=22.0,
-            screen_bottom=86.0,
-            on=dt.date(2021, 5, 12),
-        )
+    sink(bare(book), 2, connect=False)
     runs = RunRepository(book)
     runs.add(
         Run(

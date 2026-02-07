@@ -35,6 +35,53 @@ CLEAN: dict[str, float] = {
 }
 
 
+def bare(book: object, *, subpart: str = "XXX", areas: bool = True) -> Office:
+    """A site with its areas and nothing else in it.
+
+    Ten suites were each opening a site, cutting two areas and sinking four
+    wells in their own fixture, in slightly different words, and a change to
+    the site desk had to be made in ten places. They all wanted the same site.
+    """
+    office = Office(book)  # type: ignore[arg-type]
+    office.sites.open_site(
+        SITE,
+        "Northridge Sanitary Landfill",
+        subpart=subpart,
+        permit="MSW-1188-04",
+        zone=ZONE,
+        design_capacity=8_400_000.0,
+        opened_on=OPENED,
+    )
+    if areas:
+        office.sites.add_area(
+            "A-03", SITE, "phase 3 north slope", acres=12.4, first_waste=dt.date(2019, 4, 15)
+        )
+        office.sites.add_area(
+            "A-04", SITE, "phase 4 east", acres=8.0, first_waste=dt.date(2020, 6, 1)
+        )
+    return office
+
+
+def sink(office: Office, count: int, *, connect: bool = True, area: str = "A-03") -> list[str]:
+    """Drill *count* devices into one area, wiring them up unless told not to."""
+    made: list[str] = []
+    for index in range(count):
+        device = office.wellfield.drill(
+            SITE,
+            area,
+            kind=Kind.VERTICAL,
+            station=f"N {12 + index}+40 E 3+15",
+            total_depth=92.0,
+            screen_top=22.0,
+            screen_bottom=86.0,
+            on=DRILLED,
+        ).label
+        if connect:
+            office.wellfield.connect(device, WIRED)
+        made.append(device)
+    return made
+
+
 def furnish(office: Office, *, wells: int = 4, subpart: str = "XXX") -> Office:
     """Open a site, cut two areas, sink some wells and pipe them up."""
     office.sites.open_site(
