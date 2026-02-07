@@ -1,4 +1,4 @@
--- The schema as sqlite holds it at migration 14.
+-- The schema as sqlite holds it at migration 15.
 -- Written by gemwalk.tools.schema_dump. Do not edit: add a migration.
 
 CREATE TABLE area (
@@ -132,6 +132,17 @@ CREATE TABLE level (
       pumped       INTEGER NOT NULL DEFAULT 0,
       note         TEXT NOT NULL DEFAULT '',
       UNIQUE (device, taken_on)
+    );
+
+CREATE TABLE observation (
+      label      TEXT PRIMARY KEY,
+      control    TEXT NOT NULL REFERENCES control(label),
+      site       TEXT NOT NULL REFERENCES site(label),
+      started_at TEXT NOT NULL,
+      watched    REAL NOT NULL,
+      visible    REAL NOT NULL,
+      observer   TEXT NOT NULL,
+      note       TEXT NOT NULL DEFAULT ''
     );
 
 CREATE TABLE operation (
@@ -322,6 +333,12 @@ CREATE INDEX lateral_by_site ON lateral(site);
 CREATE INDEX level_by_day ON level(taken_on);
 
 CREATE INDEX level_by_device ON level(device);
+
+CREATE INDEX observation_by_at ON observation(started_at);
+
+CREATE INDEX observation_by_control ON observation(control);
+
+CREATE INDEX observation_by_site ON observation(site);
 
 CREATE INDEX operation_by_at ON operation(at);
 

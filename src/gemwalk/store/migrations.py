@@ -460,6 +460,27 @@ M014 = Migration(
     """,
 )
 
+M015 = Migration(
+    number=15,
+    name="watching a flare for smoke, which is a rule about minutes",
+    script="""
+    CREATE TABLE observation (
+      label      TEXT PRIMARY KEY,
+      control    TEXT NOT NULL REFERENCES control(label),
+      site       TEXT NOT NULL REFERENCES site(label),
+      started_at TEXT NOT NULL,
+      watched    REAL NOT NULL,
+      visible    REAL NOT NULL,
+      observer   TEXT NOT NULL,
+      note       TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE INDEX observation_by_control ON observation(control);
+    CREATE INDEX observation_by_site ON observation(site);
+    CREATE INDEX observation_by_at ON observation(started_at);
+    """,
+)
+
 MIGRATIONS: tuple[Migration, ...] = (
     M001,
     M002,
@@ -475,6 +496,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     M012,
     M013,
     M014,
+    M015,
 )
 
 
