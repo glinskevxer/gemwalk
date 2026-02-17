@@ -250,3 +250,129 @@ def test_hauled_adds_up_and_names_the_haulers(cli: Shell) -> None:
     )
     assert "930 gallons hauled" in out
     assert "Kroon Environmental" in out
+
+
+def test_a_watch_says_what_it_found(cli: Shell) -> None:
+    cli.ok(
+        "plant",
+        "install",
+        "CD-02",
+        "NORTHRIDGE",
+        "east stick",
+        "--kind",
+        "candlestick",
+        "--capacity",
+        "900",
+        "--on",
+        "2019-05-01",
+    )
+    out = cli.ok(
+        "plant",
+        "watch",
+        "CD-02",
+        "2025-06-11 09:00",
+        "--minutes",
+        "120",
+        "--smoke",
+        "6",
+        "--by",
+        "R. Bellingham",
+    )
+    assert "over the 5 minute limit" in out
+
+
+def test_an_enclosed_flare_has_no_flame_to_watch(cli: Shell) -> None:
+    out = cli.fails(
+        "plant",
+        "watch",
+        "CD-01",
+        "2025-06-11 09:00",
+        "--minutes",
+        "120",
+        "--smoke",
+        "6",
+        "--by",
+        "R. Bellingham",
+    )
+    assert "no flame to watch" in out
+
+
+def test_a_site_with_no_smoking_flares_says_so(cli: Shell) -> None:
+    assert "no watch has found more smoke" in cli.ok("plant", "smoke", "NORTHRIDGE")
+
+
+def test_a_short_watch_is_listed_as_worth_going_back_to(cli: Shell) -> None:
+    cli.ok(
+        "plant",
+        "install",
+        "CD-02",
+        "NORTHRIDGE",
+        "east stick",
+        "--kind",
+        "candlestick",
+        "--capacity",
+        "900",
+        "--on",
+        "2019-05-01",
+    )
+    cli.ok(
+        "plant",
+        "watch",
+        "CD-02",
+        "2025-06-11 09:00",
+        "--minutes",
+        "20",
+        "--smoke",
+        "4",
+        "--by",
+        "R. Bellingham",
+    )
+    assert "go back and watch it properly" in cli.ok("plant", "smoke", "NORTHRIDGE")
+
+
+def test_a_flare_nobody_watched_says_so(cli: Shell) -> None:
+    cli.ok(
+        "plant",
+        "install",
+        "CD-02",
+        "NORTHRIDGE",
+        "east stick",
+        "--kind",
+        "candlestick",
+        "--capacity",
+        "900",
+        "--on",
+        "2019-05-01",
+    )
+    assert "nobody has ever watched" in cli.ok("plant", "watches", "CD-02")
+
+
+def test_the_watch_list_carries_the_two_hour_figure(cli: Shell) -> None:
+    cli.ok(
+        "plant",
+        "install",
+        "CD-02",
+        "NORTHRIDGE",
+        "east stick",
+        "--kind",
+        "candlestick",
+        "--capacity",
+        "900",
+        "--on",
+        "2019-05-01",
+    )
+    cli.ok(
+        "plant",
+        "watch",
+        "CD-02",
+        "2025-06-11 09:00",
+        "--minutes",
+        "20",
+        "--smoke",
+        "4",
+        "--by",
+        "R. Bellingham",
+    )
+    out = cli.ok("plant", "watches", "CD-02")
+    assert "24.0" in out
+    assert "short" in out

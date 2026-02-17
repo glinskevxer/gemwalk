@@ -147,6 +147,75 @@ def plant_summary(ledger: Ledger, label: str, first: str, last: str) -> None:
     line(f"  {desk.downtime_hours(label, start, end):,.1f} hours down in the range")
 
 
+@plant.command("watch")
+@click.argument("label")
+@click.argument("at")
+@click.option("--minutes", type=float, required=True, help="how long the watch ran")
+@click.option("--smoke", type=float, required=True, help="how many of them were smoking")
+@click.option("--by", "observer", required=True, help="who stood there")
+@click.option("--note", default="", help="anything worth writing down")
+@pass_ledger
+def plant_watch(
+    ledger: Ledger,
+    label: str,
+    at: str,
+    minutes: float,
+    smoke: float,
+    observer: str,
+    note: str,
+) -> None:
+    """Write down a period spent watching a flare for smoke."""
+    control = ledger.office.plant.controls.get(label)
+    moment = moment_at(ledger, control.site, at)
+    watch = ledger.office.plant.watch(
+        label, moment, watched=minutes, visible=smoke, observer=observer, note=note
+    )
+    line(str(watch))
+
+
+@plant.command("smoke")
+@click.argument("site")
+@pass_ledger
+def plant_smoke(ledger: Ledger, site: str) -> None:
+    """List the watches that found more smoke than the rule allows."""
+    desk = ledger.office.plant
+    over = desk.smoking(site)
+    short = desk.unfinished_watches(site)
+    if not over and not short:
+        line("no watch has found more smoke than the rule allows")
+        return
+    for watch in over:
+        line(str(watch))
+    for watch in short:
+        line(str(watch))
+
+
+@plant.command("watches")
+@click.argument("label")
+@pass_ledger
+def plant_watches(ledger: Ledger, label: str) -> None:
+    """List every watch of one flare, oldest first."""
+    watches = ledger.office.plant.watches(label)
+    if not watches:
+        line(f"nobody has ever watched {label}")
+        return
+    rows(
+        ("watch", "started", "minutes", "smoking", "in two hours", "by", ""),
+        [
+            (
+                watch.label,
+                show_moment(watch.started_at, ledger.use_zone(watch.site)),
+                f"{watch.watched:g}",
+                f"{watch.visible:g}",
+                f"{watch.in_two_hours:.1f}",
+                watch.observer,
+                "over" if watch.over else ("short" if not watch.is_long_enough else ""),
+            )
+            for watch in watches
+        ],
+    )
+
+
 @plant.command("down")
 @click.argument("label")
 @click.argument("at")

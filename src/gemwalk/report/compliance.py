@@ -265,6 +265,14 @@ def _plant_section(office: Office, report: Report, site: str, quarter: Quarter) 
             None if control.floor_degrees is None else number(control.floor_degrees, 0),
         )
     section.table(table)
+    smoking = office.plant.smoking(site)
+    if smoking:
+        section.say(f"{len(smoking)} watches found more smoke than the rule allows")
+        for watch in smoking:
+            section.say(f"  {watch}")
+    short = office.plant.unfinished_watches(site)
+    if short:
+        section.say(f"{len(short)} watches stopped before they could say anything")
     long = office.plant.long_outages(
         site, dt.datetime.combine(quarter.last_day, dt.time(23, 59), tzinfo=dt.UTC)
     )

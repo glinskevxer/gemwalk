@@ -20,9 +20,11 @@ from dataclasses import dataclass
 from gemwalk.clock import UTC, hours_between
 from gemwalk.errors import RuleError, StateError
 from gemwalk.ids import Labels
+from gemwalk.model.observation import Observation
 from gemwalk.model.plant import BLOCK_HOURS, Control, ControlKind, Operation, Outage, block_start
 from gemwalk.service.sites import SiteDesk
 from gemwalk.store.book import Book
+from gemwalk.store.observations import ObservationRepository
 from gemwalk.store.plant import ControlRepository, OperationRepository, OutageRepository
 
 
@@ -59,6 +61,7 @@ class PlantDesk:
         self.controls = ControlRepository(book)
         self.operations = OperationRepository(book)
         self.outages = OutageRepository(book)
+        self.observations = ObservationRepository(book)
         self.sites = SiteDesk(book)
         self.labels = Labels(book)
 
@@ -199,6 +202,50 @@ class PlantDesk:
     def down_now(self, site: str) -> list[Outage]:
         """Every control device at a site that is down right now."""
         return self.outages.open_at(site)
+
+    def watch(
+        self,
+        control: str,
+        at: dt.datetime,
+        *,
+        watched: float,
+        visible: float,
+        observer: str,
+        note: str = "",
+    ) -> Observation:
+        """Write down a period somebody spent watching a flare for smoke."""
+        found = self.controls.get(control)
+        if found.kind.has_chamber:
+            raise RuleError(
+                "observation",
+                f"a {found.kind} has no flame to watch, it has a chamber to measure",
+            )
+        with self.book.writing():
+            return self.observations.add(
+                Observation(
+                    label=self.labels.next("watch", at.astimezone(UTC).date()),
+                    control=control,
+                    site=found.site,
+                    started_at=at,
+                    watched=watched,
+                    visible=visible,
+                    observer=observer,
+                    note=note,
+                )
+            )
+
+    def smoking(self, site: str) -> list[Observation]:
+        """Every watch at a site that found more smoke than the rule allows."""
+        return [watch for watch in self.observations.of_site(site) if watch.over]
+
+    def unfinished_watches(self, site: str) -> list[Observation]:
+        """Every short watch that was on course to be over when it stopped."""
+        return [watch for watch in self.observations.of_site(site) if watch.worth_another_look]
+
+    def watches(self, control: str) -> list[Observation]:
+        """Every watch of one flare, oldest first."""
+        self.controls.get(control)
+        return self.observations.of_control(control)
 
     def availability(self, control: str, first: dt.datetime, last: dt.datetime) -> float:
         """The share of a device's records in a range that had it running."""
