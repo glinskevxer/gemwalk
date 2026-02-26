@@ -27,6 +27,7 @@ LAYERS: dict[str, int] = {
     "nmoc": 1,
     "quality": 0,
     "design": 2,
+    "tuning": 2,
     "model": 1,
     "store": 2,
     "service": 3,
