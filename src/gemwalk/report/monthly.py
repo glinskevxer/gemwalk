@@ -43,6 +43,7 @@ def monthly_report(office: Office, site: str, month: Month, *, on: dt.date | Non
     runs = office.monitoring.runs_in(site, month)
     _runs_section(office, report, site, runs)
     _wellhead_section(office, report, runs)
+    _tuning_section(office, report, runs)
     _findings_section(office, report, site, month, day)
     _liquids_section(office, report, site, day)
     return report
@@ -136,6 +137,28 @@ def _concerns(office: Office, table: Table, assessment: Assessment) -> None:
             str(concern),
             office.liquids.explains(assessment.device, assessment.taken_on, (concern,)),
         )
+
+
+def _tuning_section(office: Office, report: Report, runs: list[Run]) -> None:
+    section = report.section("what to turn")
+    table = Table(
+        columns=(
+            Column("well"),
+            Column("what to do"),
+            Column("turns", Align.RIGHT),
+            Column("why"),
+        ),
+        empty="nothing on the field wants touching",
+    )
+    for pass_ in runs:
+        for advice in office.monitoring.to_touch(pass_.label):
+            table.add(
+                advice.device,
+                str(advice.move),
+                number(advice.turns) if advice.turns else "-",
+                advice.because,
+            )
+    section.table(table)
 
 
 def _findings_section(

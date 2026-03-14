@@ -222,6 +222,35 @@ def run_quality(ledger: Ledger, label: str) -> None:
     )
 
 
+@run.command("tune")
+@click.argument("label")
+@click.option("--all", "everything", is_flag=True, help="list the wellheads to leave too")
+@pass_ledger
+def run_tune(ledger: Ledger, label: str, everything: bool) -> None:
+    """Say what to do to every valve on a run, the ones that matter first."""
+    desk = ledger.office.monitoring
+    given = desk.tuning(label) if everything else desk.to_touch(label)
+    if not given:
+        line("nothing on this run wants touching")
+        return
+    body: list[tuple[str, ...]] = []
+    for advice in given:
+        reading = desk.readings.on_run_for(label, advice.device)
+        at = f"{reading.valve_after:g}" if reading is not None else "-"
+        to = f"{advice.position(reading):g}" if reading is not None else "-"
+        body.append(
+            (
+                advice.device,
+                str(advice.move),
+                f"{advice.turns:g}" if advice.is_action else "",
+                at,
+                to if advice.is_action else "",
+                advice.because,
+            )
+        )
+    rows(("well", "what to do", "turns", "at", "to", "why"), body)
+
+
 @run.command("shape")
 @click.argument("label")
 @click.option(

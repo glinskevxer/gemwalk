@@ -356,3 +356,30 @@ def test_all_or_nothing_writes_nothing_when_a_row_is_bad(cli: Shell, tmp_path: P
 def test_a_sheet_that_is_not_there_is_refused_by_click(cli: Shell) -> None:
     out = cli.fails("run", "take", "MR-2025-04-01", "/nowhere/field.csv", "--on", "2025-04-08")
     assert "does not exist" in out
+
+
+def test_a_clean_run_wants_nothing_turned(cli: Shell) -> None:
+    label = walk(cli, "2025-04-08")
+    assert "nothing on this run wants touching" in cli.ok("run", "tune", label)
+
+
+def test_a_hot_wellhead_is_told_to_close_in(cli: Shell) -> None:
+    label = walk(cli, "2025-04-08", "VW-002", temp="138.0")
+    out = cli.ok("run", "tune", label)
+    assert "VW-002" in out
+    assert "close in" in out
+    assert "over the 131.0 F limit" in out
+
+
+def test_the_tuning_table_says_where_the_valve_ends_up(cli: Shell) -> None:
+    label = walk(cli, "2025-04-08", "VW-002", temp="138.0")
+    out = cli.ok("run", "tune", label)
+    assert "3" in out
+    assert "2" in out
+
+
+def test_the_whole_field_can_be_listed(cli: Shell) -> None:
+    label = walk(cli, "2025-04-08")
+    out = cli.ok("run", "tune", label, "--all")
+    assert "leave it where it is" in out
+    assert "VW-001" in out

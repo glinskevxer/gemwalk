@@ -22,10 +22,12 @@ from gemwalk.model.device import Device
 from gemwalk.model.reading import Reading, Run
 from gemwalk.quality import Character
 from gemwalk.service.instruments import InstrumentDesk
+from gemwalk.service.liquids import LiquidsDesk
 from gemwalk.service.sites import SiteDesk
 from gemwalk.service.wellfield import WellfieldDesk
 from gemwalk.store.book import Book
 from gemwalk.store.readings import ReadingRepository, RunRepository
+from gemwalk.tuning import Advice, plan
 
 
 class MonitoringDesk:
@@ -38,6 +40,7 @@ class MonitoringDesk:
         self.wellfield = WellfieldDesk(book)
         self.sites = SiteDesk(book)
         self.instruments = InstrumentDesk(book)
+        self.liquids = LiquidsDesk(book)
         self.labels = Labels(book)
 
     def open_run(self, site: str, on: dt.date, *, monitor: str, meter: str) -> Run:
@@ -154,6 +157,28 @@ class MonitoringDesk:
     def exceedances(self, run: str) -> list[Assessment]:
         """Only the wellheads on one run that are over something."""
         return [a for a in self.assessments(run) if not a.is_clear]
+
+    def tuning(self, run: str) -> list[Advice]:
+        """What to do to every valve on a run, the ones that matter first.
+
+        Whether a wellhead is standing full of water comes off the tape drops
+        and not off the gas reading, which is why the advice is worked out here
+        rather than in the run itself. A dead reading with no tape drop behind
+        it gets a valve answer, and a dead reading with a flooded well behind it
+        gets told to dewater instead. They look identical on the field sheet.
+        """
+        pass_ = self.runs.get(run)
+        subpart = self.sites.standard_of(pass_.site)
+        rows: list[tuple[Reading, Device, bool]] = []
+        for reading in self.readings.of_run(run):
+            device = self.wellfield.devices.get(reading.device)
+            water = self.liquids.water_in(reading.device, reading.taken_on)
+            rows.append((reading, device, bool(water and water.flooded)))
+        return plan(rows, subpart)
+
+    def to_touch(self, run: str) -> list[Advice]:
+        """Only the wellheads on a run that somebody has to go and turn."""
+        return [given for given in self.tuning(run) if given.is_action]
 
     def characters(self, run: str) -> dict[str, Character]:
         """What each wellhead's analysis says is going on, in device order."""
