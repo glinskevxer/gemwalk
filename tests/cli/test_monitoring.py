@@ -236,7 +236,7 @@ def test_the_wellheads_of_one_shape_can_be_listed(cli: Shell) -> None:
     label = walk(
         cli, "2025-04-08", "VW-002", methane="38.0", carbon="27.0", oxygen="0.4", balance="34.5"
     )
-    out = cli.ok("run", "shape", label, "--like", "starved")
+    out = cli.ok("run", "like", label, "--like", "starved")
     assert "1 wellheads read as" in out
     assert "VW-002" in out
     assert "nitrogen unaccounted for" in out
@@ -244,7 +244,7 @@ def test_the_wellheads_of_one_shape_can_be_listed(cli: Shell) -> None:
 
 def test_a_shape_nothing_read_as_comes_back_empty(cli: Shell) -> None:
     label = walk(cli, "2025-04-08")
-    assert "0 wellheads read as" in cli.ok("run", "shape", label, "--like", "thin")
+    assert "0 wellheads read as" in cli.ok("run", "like", label, "--like", "thin")
 
 
 def test_the_desk_hands_out_a_heading_row(cli: Shell) -> None:
@@ -383,3 +383,40 @@ def test_the_whole_field_can_be_listed(cli: Shell) -> None:
     out = cli.ok("run", "tune", label, "--all")
     assert "leave it where it is" in out
     assert "VW-001" in out
+
+
+def test_the_shape_table_carries_every_figure(cli: Shell) -> None:
+    label = walk(cli, "2025-04-08")
+    out = cli.ok("run", "shape", label)
+    assert "methane" in out
+    assert "temperature" in out
+    assert "corrected" in out
+    assert "tight" in out
+
+
+def test_a_run_with_no_readings_says_so(cli: Shell) -> None:
+    cli.ok(
+        "run",
+        "open",
+        "NORTHRIDGE",
+        "--on",
+        "2025-04-08",
+        "--monitor",
+        "D. Kasprzak",
+        "--meter",
+        "GEM5000-40912",
+    )
+    assert "no readings on it" in cli.ok("run", "shape", "MR-2025-04-01")
+
+
+def test_the_shape_names_the_outliers(cli: Shell) -> None:
+    label = walk(
+        cli, "2025-04-08", "VW-002", methane="2.0", carbon="2.0", oxygen="0.5", balance="95.5"
+    )
+    out = cli.ok("run", "shape", label)
+    assert "methane outliers: VW-002" in out
+
+
+def test_the_shape_says_how_much_of_the_field_is_thin(cli: Shell) -> None:
+    label = walk(cli, "2025-04-08")
+    assert "0% of the field is under 40% methane" in cli.ok("run", "shape", label)

@@ -222,6 +222,44 @@ def run_quality(ledger: Ledger, label: str) -> None:
     )
 
 
+FIGURES = ("methane", "carbon", "oxygen", "balance", "temperature", "static", "flow", "corrected")
+
+
+@run.command("shape")
+@click.argument("label")
+@pass_ledger
+def run_shape_of(ledger: Ledger, label: str) -> None:
+    """Say what shape the field is in, column by column."""
+    desk = ledger.office.monitoring
+    body: list[tuple[str, ...]] = []
+    for figure in FIGURES:
+        shape = desk.shape_of(label, figure)
+        if shape is None:
+            continue
+        body.append(
+            (
+                figure,
+                str(shape.count),
+                f"{shape.smallest:.1f}",
+                f"{shape.lower:.1f}",
+                f"{shape.middle:.1f}",
+                f"{shape.upper:.1f}",
+                f"{shape.largest:.1f}",
+                "tight" if shape.is_tight else "spread",
+            )
+        )
+    if not body:
+        line("this run has no readings on it")
+        return
+    rows(("figure", "n", "least", "lower", "middle", "upper", "most", ""), body)
+    for figure in ("methane", "flow"):
+        odd = desk.outliers(label, figure)
+        if odd:
+            line(f"{figure} outliers: " + ", ".join(odd))
+    thin = desk.share_of_field(label, "methane", 40.0, over=False)
+    line(f"{thin * 100:.0f}% of the field is under 40% methane")
+
+
 @run.command("tune")
 @click.argument("label")
 @click.option("--all", "everything", is_flag=True, help="list the wellheads to leave too")
@@ -251,7 +289,7 @@ def run_tune(ledger: Ledger, label: str, everything: bool) -> None:
     rows(("well", "what to do", "turns", "at", "to", "why"), body)
 
 
-@run.command("shape")
+@run.command("like")
 @click.argument("label")
 @click.option(
     "--like",

@@ -25,6 +25,7 @@ from gemwalk.service.instruments import InstrumentDesk
 from gemwalk.service.liquids import LiquidsDesk
 from gemwalk.service.sites import SiteDesk
 from gemwalk.service.wellfield import WellfieldDesk
+from gemwalk.spread import Spread, share_over, share_under, spread
 from gemwalk.store.book import Book
 from gemwalk.store.readings import ReadingRepository, RunRepository
 from gemwalk.tuning import Advice, plan
@@ -197,6 +198,33 @@ class MonitoringDesk:
     def field_flow(self, run: str) -> float:
         """Standard cubic feet a minute the whole field was giving."""
         return sum(r.flow for r in self.readings.of_run(run))
+
+    def shape_of(self, run: str, figure: str) -> Spread | None:
+        """The shape of one column of a run's readings, or nothing when empty."""
+        values = self.column(run, figure)
+        return spread(values) if values else None
+
+    def column(self, run: str, figure: str) -> list[float]:
+        """One figure off every reading on a run, in device order."""
+        readings = self.readings.of_run(run)
+        if figure == "corrected":
+            return [r.analysis.corrected_methane.value for r in readings]
+        return [float(getattr(r, figure)) for r in self.readings.of_run(run)]
+
+    def outliers(self, run: str, figure: str) -> list[str]:
+        """The wellheads whose figure sits well outside the middle of the field."""
+        shape = self.shape_of(run, figure)
+        if shape is None:
+            return []
+        odd = set(shape.outliers(self.column(run, figure)))
+        return [r.device for r in self.readings.of_run(run) if float(getattr(r, figure)) in odd]
+
+    def share_of_field(self, run: str, figure: str, threshold: float, *, over: bool) -> float:
+        """What share of the field is over or under a threshold on one figure."""
+        values = self.column(run, figure)
+        if not values:
+            return 0.0
+        return share_over(values, threshold) if over else share_under(values, threshold)
 
     def drifting(self, device: str, back: int = 3) -> float | None:
         """How far corrected methane has moved over the last *back* readings.
