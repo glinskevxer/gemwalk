@@ -1,4 +1,4 @@
--- The schema as sqlite holds it at migration 15.
+-- The schema as sqlite holds it at migration 16.
 -- Written by gemwalk.tools.schema_dump. Do not edit: add a migration.
 
 CREATE TABLE area (
@@ -33,6 +33,14 @@ CREATE TABLE control (
       minimum_temp REAL,
       installed_on TEXT NOT NULL,
       retired_on   TEXT
+    );
+
+CREATE TABLE covered (
+      id      INTEGER PRIMARY KEY AUTOINCREMENT,
+      walk    TEXT NOT NULL REFERENCES walk(label),
+      leg     TEXT NOT NULL REFERENCES leg(label),
+      note    TEXT NOT NULL DEFAULT '',
+      UNIQUE (walk, leg)
     );
 
 CREATE TABLE device (
@@ -122,6 +130,15 @@ CREATE TABLE lateral (
       length_feet   REAL NOT NULL,
       installed_on  TEXT NOT NULL,
       retired_on    TEXT
+    );
+
+CREATE TABLE leg (
+      label      TEXT PRIMARY KEY,
+      site       TEXT NOT NULL REFERENCES site(label),
+      area       TEXT NOT NULL REFERENCES area(label),
+      name       TEXT NOT NULL,
+      metres     REAL NOT NULL,
+      retired_on TEXT
     );
 
 CREATE TABLE level (
@@ -298,6 +315,10 @@ CREATE INDEX calibration_by_instrument ON calibration(instrument);
 
 CREATE INDEX control_by_site ON control(site);
 
+CREATE INDEX covered_by_leg ON covered(leg);
+
+CREATE INDEX covered_by_walk ON covered(walk);
+
 CREATE INDEX device_by_area ON device(area);
 
 CREATE INDEX device_by_lateral ON device(lateral);
@@ -329,6 +350,10 @@ CREATE INDEX instrument_by_site ON instrument(site);
 CREATE INDEX lateral_by_header ON lateral(header);
 
 CREATE INDEX lateral_by_site ON lateral(site);
+
+CREATE INDEX leg_by_area ON leg(area);
+
+CREATE INDEX leg_by_site ON leg(site);
 
 CREATE INDEX level_by_day ON level(taken_on);
 

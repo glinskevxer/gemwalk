@@ -481,6 +481,34 @@ M015 = Migration(
     """,
 )
 
+M016 = Migration(
+    number=16,
+    name="the route a walkover is meant to follow, and whether it did",
+    script="""
+    CREATE TABLE leg (
+      label      TEXT PRIMARY KEY,
+      site       TEXT NOT NULL REFERENCES site(label),
+      area       TEXT NOT NULL REFERENCES area(label),
+      name       TEXT NOT NULL,
+      metres     REAL NOT NULL,
+      retired_on TEXT
+    );
+
+    CREATE TABLE covered (
+      id      INTEGER PRIMARY KEY AUTOINCREMENT,
+      walk    TEXT NOT NULL REFERENCES walk(label),
+      leg     TEXT NOT NULL REFERENCES leg(label),
+      note    TEXT NOT NULL DEFAULT '',
+      UNIQUE (walk, leg)
+    );
+
+    CREATE INDEX leg_by_site ON leg(site);
+    CREATE INDEX leg_by_area ON leg(area);
+    CREATE INDEX covered_by_walk ON covered(walk);
+    CREATE INDEX covered_by_leg ON covered(leg);
+    """,
+)
+
 MIGRATIONS: tuple[Migration, ...] = (
     M001,
     M002,
@@ -497,6 +525,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     M013,
     M014,
     M015,
+    M016,
 )
 
 
