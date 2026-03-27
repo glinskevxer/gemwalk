@@ -18,10 +18,12 @@ from gemwalk.clock import Quarter
 from gemwalk.errors import RuleError, StateError
 from gemwalk.ids import Labels
 from gemwalk.model.landfill import Cover
+from gemwalk.model.route import Covered, Leg, Route, pattern_for
 from gemwalk.model.surface import Hit, Step, Walk
 from gemwalk.service.instruments import InstrumentDesk
 from gemwalk.service.sites import SiteDesk
 from gemwalk.store.book import Book
+from gemwalk.store.route import CoveredRepository, LegRepository
 from gemwalk.store.surface import HitRepository, WalkRepository
 
 
@@ -42,6 +44,8 @@ class SurfaceDesk:
         self.book = book
         self.walks = WalkRepository(book)
         self.hits = HitRepository(book)
+        self.legs = LegRepository(book)
+        self.covered = CoveredRepository(book)
         self.sites = SiteDesk(book)
         self.instruments = InstrumentDesk(book)
         self.labels = Labels(book)
@@ -149,6 +153,75 @@ class SurfaceDesk:
                 return self.hits.put(found.still_over(subpart, on, note))
             return self.hits.put(found.clear(on, note))
 
+    def lay_pattern(self, area: str, *, legs: int, metres: float) -> list[Leg]:
+        """Lay a numbered pattern of legs across one area."""
+        found = self.sites.areas.get(area)
+        made: list[Leg] = []
+        with self.book.writing():
+            already = len(self.legs.of_area(area))
+            for number in range(already + 1, already + legs + 1):
+                made.append(
+                    self.legs.add(
+                        Leg(
+                            label=f"{area}-L{number:02d}",
+                            site=found.site,
+                            area=area,
+                            name=f"line {number} across {found.name}",
+                            metres=metres,
+                        )
+                    )
+                )
+        return made
+
+    def wanted_legs(self, area: str, metres: float) -> int:
+        """How many legs of a given length the pattern over an area needs."""
+        found = self.sites.areas.get(area)
+        return pattern_for(found.acres, self.sites.standard_of(found.site), metres)
+
+    def cross(self, walk: str, leg: str, note: str = "") -> Covered:
+        """Record that a walk crossed one leg of the pattern."""
+        pass_ = self.walks.get(walk)
+        found = self.legs.get(leg)
+        if found.site != pass_.site:
+            raise RuleError("leg", f"{leg} is not a leg at {pass_.site}")
+        if not pass_.is_open:
+            raise StateError(walk, "finished", "open")
+        with self.book.writing():
+            return self.covered.add(Covered(walk=walk, leg=leg, note=note))
+
+    def route_of(self, walk: str, area: str) -> Route:
+        """The pattern over one area, and how much of it a walk covered."""
+        pass_ = self.walks.get(walk)
+        found = self.sites.areas.get(area)
+        crossed = self.covered.labels_of(walk)
+        legs = tuple(self.legs.live_in(area))
+        del pass_
+        return Route(
+            area=area,
+            acres=found.acres,
+            legs=legs,
+            walked=tuple(label for label in crossed if label in {leg.label for leg in legs}),
+        )
+
+    def routes_of(self, walk: str) -> list[Route]:
+        """The pattern over every area of the site, as one walk covered it."""
+        pass_ = self.walks.get(walk)
+        return [self.route_of(walk, area.label) for area in self.sites.areas_of(pass_.site)]
+
+    def incomplete(self, walk: str) -> list[Route]:
+        """Every area whose pattern this walk did not cross whole.
+
+        An area with no pattern laid out is not listed. Nobody said what a
+        whole walk of it was, so nothing can say the walk fell short of it, and
+        pretending otherwise would make every site with no pattern look like a
+        site that missed everything.
+        """
+        return [route for route in self.routes_of(walk) if route.legs and not route.is_whole]
+
+    def covered_whole(self, walk: str) -> bool:
+        """True when the walk crossed every leg of every pattern there is."""
+        return not self.incomplete(walk)
+
     def board(self, site: str, on: dt.date) -> list[Mark]:
         """Every open spot at a site, the least time left first."""
         subpart = self.sites.standard_of(site)
@@ -180,7 +253,7 @@ class SurfaceDesk:
             walks = [
                 w
                 for w in self.walks.in_quarter(site, quarter)
-                if not w.is_open and w.is_valid(subpart)
+                if not w.is_open and w.is_valid(subpart) and self.covered_whole(w.label)
             ]
             if not walks:
                 missed.append(quarter)

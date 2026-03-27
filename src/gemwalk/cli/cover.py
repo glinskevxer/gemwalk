@@ -126,6 +126,52 @@ def cover_remonitor(ledger: Ledger, hit: str, reading: float, on: dt.date, note:
     line(f"{after.label} still over, attempt {after.attempt}, {after.step} by {after.due(subpart)}")
 
 
+@cover.command("pattern")
+@click.argument("area")
+@click.option("--legs", type=int, default=None, help="how many legs to lay, or work it out")
+@click.option("--metres", type=float, required=True, help="how long each leg is")
+@pass_ledger
+def cover_pattern(ledger: Ledger, area: str, legs: int | None, metres: float) -> None:
+    """Lay the walkover pattern across one area."""
+    desk = ledger.office.surface
+    wanted = desk.wanted_legs(area, metres)
+    made = desk.lay_pattern(area, legs=legs if legs is not None else wanted, metres=metres)
+    line(f"{len(made)} legs laid across {area}, which wants {wanted}")
+    for leg in made:
+        line(f"  {leg.label}  {leg.name}  {leg.metres:g} m")
+
+
+@cover.command("cross")
+@click.argument("walk")
+@click.argument("legs", nargs=-1, required=True)
+@click.option("--note", default="", help="anything worth writing down")
+@pass_ledger
+def cover_cross(ledger: Ledger, walk: str, legs: tuple[str, ...], note: str) -> None:
+    """Record that a walk crossed one or more legs of the pattern."""
+    for leg in legs:
+        ledger.office.surface.cross(walk, leg, note)
+    line(f"{len(legs)} legs crossed on {walk}")
+
+
+@cover.command("route")
+@click.argument("walk")
+@pass_ledger
+def cover_route(ledger: Ledger, walk: str) -> None:
+    """Say how much of the pattern a walk covered, area by area."""
+    desk = ledger.office.surface
+    routes = desk.routes_of(walk)
+    if not routes:
+        line("this site has no areas to walk")
+        return
+    subpart = ledger.office.sites.standard_of(desk.walks.get(walk).site)
+    for route in routes:
+        line(str(route))
+        if route.legs:
+            line(f"  {route.swept(subpart):.1f} of {route.acres:g} acres crossed")
+    if desk.covered_whole(walk):
+        line("the whole pattern was walked")
+
+
 @cover.command("board")
 @click.argument("site")
 @click.option("--on", type=DAY, required=True, help="the day to measure against")

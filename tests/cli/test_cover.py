@@ -183,3 +183,41 @@ def test_the_walk_list_says_which_ones_stand(cli: Shell) -> None:
     out = cli.ok("cover", "walks", "NORTHRIDGE")
     assert "SW-2025Q2-01" in out
     assert "yes" in out
+
+
+def test_laying_a_pattern_says_how_many_the_area_wants(cli: Shell) -> None:
+    out = cli.ok("cover", "pattern", "A-03", "--metres", "400")
+    assert "5 legs laid across A-03, which wants 5" in out
+    assert "A-03-L01" in out
+
+
+def test_a_walk_that_crossed_nothing_is_short(cli: Shell) -> None:
+    cli.ok("cover", "pattern", "A-03", "--legs", "2", "--metres", "400")
+    walk = a_walk(cli)
+    out = cli.ok("cover", "route", walk)
+    assert "missed A-03-L01, A-03-L02" in out
+    assert "the whole pattern was walked" not in out
+
+
+def test_a_walk_that_crossed_every_leg_is_whole(cli: Shell) -> None:
+    cli.ok("cover", "pattern", "A-03", "--legs", "2", "--metres", "400")
+    walk = a_walk(cli)
+    out = cli.ok("cover", "cross", walk, "A-03-L01", "A-03-L02")
+    assert "2 legs crossed" in out
+    assert "the whole pattern was walked" in cli.ok("cover", "route", walk)
+
+
+def test_a_short_walk_leaves_its_quarter_missed(cli: Shell) -> None:
+    cli.ok("cover", "pattern", "A-03", "--legs", "2", "--metres", "400")
+    walk = a_walk(cli)
+    cli.ok("cover", "finish", walk, "--on", "2025-05-15")
+    out = cli.ok("cover", "gaps", "NORTHRIDGE", "--first", "2025Q2", "--last", "2025Q2")
+    assert "2025Q2" in out
+
+
+def test_the_route_says_how_many_acres_were_crossed(cli: Shell) -> None:
+    cli.ok("cover", "pattern", "A-03", "--legs", "2", "--metres", "400")
+    walk = a_walk(cli)
+    cli.ok("cover", "cross", walk, "A-03-L01")
+    out = cli.ok("cover", "route", walk)
+    assert "of 12.4 acres crossed" in out

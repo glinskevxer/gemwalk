@@ -101,6 +101,17 @@ def _surface_section(office: Office, report: Report, site: str, quarter: Quarter
             "yes" if not faults else "; ".join(faults),
         )
     section.table(table)
+    for walk in walks:
+        for route in office.surface.incomplete(walk.label):
+            section.say(f"{walk.label} {route}")
+    for walk in walks:
+        for area in office.sites.areas_of(site):
+            route = office.surface.route_of(walk.label, area.label)
+            if route.legs and not route.enough_for(subpart):
+                section.say(
+                    f"{walk.label} crossed {route.swept(subpart):.1f} of "
+                    f"{route.acres:g} acres in {area.label}"
+                )
     missed = office.surface.quarters_missed(site, quarter, quarter)
     if missed:
         section.say("this quarter has no valid finished walkover on the record")
