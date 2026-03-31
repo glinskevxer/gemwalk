@@ -11,6 +11,7 @@ from dataclasses import replace
 from typing import Any, ClassVar
 
 from gemwalk.clock import read_day
+from gemwalk.errors import DesignError
 from gemwalk.model.plant import Control, ControlKind, Operation, Outage
 from gemwalk.store.book import Row
 from gemwalk.store.columns import (
@@ -25,16 +26,24 @@ from gemwalk.store.repo import Repository
 
 
 def stamp(moment: dt.datetime) -> str:
-    """Write a moment the way the book stores it."""
+    """Write a moment the way the book stores it.
+
+    The blank handling lives in :mod:`gemwalk.store.columns` and this is the
+    narrower pair for a column that cannot be blank. It refuses rather than
+    asserting, because an assertion is compiled out under ``-O`` and this would
+    then quietly write ``None`` into a column declared not null.
+    """
     written = moment_text(moment)
-    assert written is not None
+    if written is None:
+        raise DesignError("moment", "a moment that cannot be blank was blank")
     return written
 
 
 def unstamp(text: str) -> dt.datetime:
     """Read a moment back out of the book."""
     read = read_moment_or_none(text)
-    assert read is not None
+    if read is None:
+        raise DesignError("moment", f"{text!r} is not a moment")
     return read
 
 

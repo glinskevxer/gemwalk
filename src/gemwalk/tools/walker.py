@@ -34,6 +34,17 @@ class Module:
     path: Path
     name: str
     tree: ast.Module
+    text: str = ""
+
+    def source(self) -> str:
+        """The file as it is written, comments and all.
+
+        A check about comments cannot work off the tree, because comments are
+        not in it. The text is carried on the module rather than read from the
+        path on demand so that a check can be handed a module that was never
+        written to disk.
+        """
+        return self.text or self.path.read_text()
 
     @property
     def relative(self) -> str:
@@ -76,14 +87,16 @@ def modules(under: str = "") -> Iterator[Module]:
     root = package_root()
     start = root / under if under else root
     for path in sorted(start.rglob("*.py")):
-        yield Module(path, _name_of(path, root, "gemwalk"), ast.parse(path.read_text()))
+        text = path.read_text()
+        yield Module(path, _name_of(path, root, "gemwalk"), ast.parse(text), text)
 
 
 def suite_modules() -> Iterator[Module]:
     """Every test file in the suite, in path order."""
     root = suite_root()
     for path in sorted(root.rglob("*.py")):
-        yield Module(path, _name_of(path, root, "tests"), ast.parse(path.read_text()))
+        text = path.read_text()
+        yield Module(path, _name_of(path, root, "tests"), ast.parse(text), text)
 
 
 def report(name: str, faults: list[str]) -> int:

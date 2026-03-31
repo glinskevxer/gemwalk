@@ -47,6 +47,7 @@ jobs:
       - run: python -m gemwalk.tools.check_naming
       - run: python -m gemwalk.tools.check_errors
       - run: python -m gemwalk.tools.check_design
+      - run: python -m gemwalk.tools.check_style
       - run: python -m gemwalk.tools.check_package
       - run: python -m gemwalk.tools.check_readme
       - run: python -m gemwalk.tools.schema_dump --check
