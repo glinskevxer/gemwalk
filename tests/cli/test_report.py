@@ -135,3 +135,74 @@ def test_the_annual_report_prints(cli: Shell) -> None:
 
 def test_a_year_that_is_not_a_number_is_refused(cli: Shell) -> None:
     assert "not a valid integer" in cli.fails("report", "year", "NORTHRIDGE", "last")
+
+
+def test_a_site_still_open_cannot_turn_its_system_off(cli: Shell) -> None:
+    out = cli.ok(
+        "report",
+        "removal",
+        "NORTHRIDGE",
+        "--on",
+        "2025-06-30",
+        "--acceptance",
+        "180000",
+        "--age",
+        "40",
+    )
+    assert "still taking waste" in out
+
+
+def test_three_good_samples_let_a_closed_site_turn_off(cli: Shell) -> None:
+    cli.ok(
+        "site",
+        "open",
+        "OLDFIELD",
+        "Oldfield Landfill",
+        "--subpart",
+        "Cf",
+        "--permit",
+        "MSW-0904-11",
+        "--zone",
+        "America/Chicago",
+        "--capacity",
+        "4100000",
+        "--opened",
+        "1985-04-01",
+    )
+    cli.ok(
+        "site",
+        "area",
+        "C-01",
+        "OLDFIELD",
+        "the whole hill",
+        "--acres",
+        "22",
+        "--first-waste",
+        "1986-05-01",
+    )
+    cli.ok("site", "stop", "C-01", "--on", "2004-12-01")
+    cli.ok("site", "cap", "C-01", "--on", "2005-06-01")
+    cli.ok("site", "close", "OLDFIELD", "--on", "2005-06-30")
+    out = cli.ok(
+        "report",
+        "removal",
+        "OLDFIELD",
+        "--on",
+        "2025-06-30",
+        "--acceptance",
+        "180000",
+        "--age",
+        "40",
+        "--sample",
+        "2024-01-01",
+        "50",
+        "--sample",
+        "2024-05-01",
+        "45",
+        "--sample",
+        "2024-09-01",
+        "40",
+    )
+    assert "3 samples on file" in out
+    assert "may be turned off" in out
+    assert "under" in out

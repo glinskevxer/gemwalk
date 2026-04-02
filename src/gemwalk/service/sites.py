@@ -12,6 +12,8 @@ import datetime as dt
 
 from gemwalk.errors import RuleError
 from gemwalk.model.landfill import Area, Cover, Site
+from gemwalk.nmoc import Estimate
+from gemwalk.removal import Case, Sample, case
 from gemwalk.rules import Election, Standard, standard
 from gemwalk.store.book import Book
 from gemwalk.store.sites import AreaRepository, SiteRepository
@@ -125,6 +127,22 @@ class SiteDesk:
         area = self.areas.get(label)
         with self.book.writing():
             return self.areas.put(area.close(on, cover))
+
+    def removal_case(self, site: str, on: dt.date, samples: list[tuple[dt.date, Estimate]]) -> Case:
+        """Read a site against the criteria for turning its system off.
+
+        The samples are handed in rather than read out of the book, because the
+        emission rate is worked out from figures the site reports to the state
+        and not from anything this desk records. What the desk contributes is
+        the day the site closed, which is the one thing it does know.
+        """
+        found = self.sites.get(site)
+        return case(
+            standard(found.standard),
+            closed_on=found.closed_on,
+            asked_on=on,
+            samples=[Sample(on=day, estimate=estimate) for day, estimate in samples],
+        )
 
     def areas_of(self, site: str) -> list[Area]:
         """Every area of a site, in label order."""

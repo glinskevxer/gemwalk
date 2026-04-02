@@ -53,7 +53,7 @@ class Case:
 
     closed_on: dt.date | None
     asked_on: dt.date
-    tests: tuple[Sample, ...]
+    samples: tuple[Sample, ...]
     years_closed: float
     long_enough: bool
     enough_tests: bool
@@ -80,11 +80,11 @@ class Case:
         elif not self.long_enough:
             short.append(f"closed {self.years_closed:.1f} years, which is short of {YEARS_CLOSED}")
         if not self.enough_tests:
-            short.append(f"{len(self.tests)} tests on file, which is short of {SAMPLES_WANTED}")
+            short.append(f"{len(self.samples)} samples on file, which is short of {SAMPLES_WANTED}")
         elif not self.far_enough_apart:
-            short.append(f"the tests are not {DAYS_APART} days apart")
+            short.append(f"the samples are not {DAYS_APART} days apart")
         if self.enough_tests and not self.all_under:
-            short.append("not every test came in under the threshold")
+            short.append("not every sample came in under the threshold")
         if self.enough_tests and self.all_under and not self.settled:
             short.append("the rate is still going up")
         return tuple(short)
@@ -95,13 +95,13 @@ class Case:
         return "not yet: " + "; ".join(self.missing)
 
 
-def _spaced(tests: tuple[Sample, ...]) -> bool:
-    days = [test.on for test in tests]
+def _spaced(samples: tuple[Sample, ...]) -> bool:
+    days = [sample.on for sample in samples]
     return all((later - earlier).days >= DAYS_APART for earlier, later in pairwise(days))
 
 
-def _settled(tests: tuple[Sample, ...]) -> bool:
-    rates = [test.estimate.megagrams for test in tests]
+def _settled(samples: tuple[Sample, ...]) -> bool:
+    rates = [sample.estimate.megagrams for sample in samples]
     return all(later <= earlier for earlier, later in pairwise(rates))
 
 
@@ -110,24 +110,24 @@ def case(
     *,
     closed_on: dt.date | None,
     asked_on: dt.date,
-    tests: list[Sample],
+    samples: list[Sample],
 ) -> Case:
     """Read a site against the three criteria for taking the system out."""
     if closed_on is not None and asked_on < closed_on:
         raise RuleError("removal", "the day asked about is before the site closed")
-    ordered = tuple(sorted(tests, key=lambda test: test.on))
+    ordered = tuple(sorted(samples, key=lambda sample: sample.on))
     recent = ordered[-SAMPLES_WANTED:]
     years = 0.0 if closed_on is None else (asked_on - closed_on).days / 365.25
     enough = len(ordered) >= SAMPLES_WANTED
     return Case(
         closed_on=closed_on,
         asked_on=asked_on,
-        tests=ordered,
+        samples=ordered,
         years_closed=years,
         long_enough=closed_on is not None and years >= YEARS_CLOSED,
         enough_tests=enough,
         far_enough_apart=enough and _spaced(recent),
-        all_under=enough and all(test.under(standard) for test in recent),
+        all_under=enough and all(sample.under(standard) for sample in recent),
         settled=enough and _settled(recent),
     )
 

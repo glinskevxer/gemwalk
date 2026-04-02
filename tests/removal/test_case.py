@@ -35,32 +35,32 @@ def three(first: dt.date, gap: int, rates: tuple[float, float, float]) -> list[S
 
 
 def test_a_site_still_taking_waste_cannot_turn_anything_off() -> None:
-    read = case(XXX, closed_on=None, asked_on=ASKED, tests=[])
+    read = case(XXX, closed_on=None, asked_on=ASKED, samples=[])
     assert not read.is_allowed
     assert "still taking waste" in read.missing[0]
 
 
 def test_a_site_closed_too_recently_says_how_short_it_is() -> None:
-    read = case(XXX, closed_on=dt.date(2020, 1, 1), asked_on=ASKED, tests=[])
+    read = case(XXX, closed_on=dt.date(2020, 1, 1), asked_on=ASKED, samples=[])
     assert not read.long_enough
     assert any("short of 15" in said for said in read.missing)
 
 
 def test_a_site_closed_long_enough_passes_the_first_criterion() -> None:
-    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, tests=[])
+    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, samples=[])
     assert read.long_enough
     assert read.years_closed == pytest.approx(20.0, abs=0.1)
 
 
 def test_too_few_tests_says_how_many_are_wanted() -> None:
-    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, tests=[a_sample(ASKED, 10.0)])
+    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, samples=[a_sample(ASKED, 10.0)])
     assert not read.enough_tests
     assert any(f"short of {SAMPLES_WANTED}" in said for said in read.missing)
 
 
 def test_tests_too_close_together_are_refused() -> None:
     tests = three(dt.date(2024, 1, 1), 30, (10.0, 9.0, 8.0))
-    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, tests=tests)
+    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, samples=tests)
     assert read.enough_tests
     assert not read.far_enough_apart
     assert any(f"not {DAYS_APART} days apart" in said for said in read.missing)
@@ -68,20 +68,20 @@ def test_tests_too_close_together_are_refused() -> None:
 
 def test_tests_far_enough_apart_pass() -> None:
     tests = three(dt.date(2024, 1, 1), 120, (10.0, 9.0, 8.0))
-    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, tests=tests)
+    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, samples=tests)
     assert read.far_enough_apart
 
 
 def test_a_test_over_the_threshold_stops_the_whole_thing() -> None:
     tests = three(dt.date(2024, 1, 1), 120, (10.0, 60.0, 8.0))
-    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, tests=tests)
+    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, samples=tests)
     assert not read.all_under
-    assert any("not every test" in said for said in read.missing)
+    assert any("not every sample" in said for said in read.missing)
 
 
 def test_a_rate_that_is_going_up_stops_it_too() -> None:
     tests = three(dt.date(2024, 1, 1), 120, (8.0, 9.0, 10.0))
-    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, tests=tests)
+    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, samples=tests)
     assert read.all_under
     assert not read.settled
     assert any("still going up" in said for said in read.missing)
@@ -89,13 +89,13 @@ def test_a_rate_that_is_going_up_stops_it_too() -> None:
 
 def test_a_rate_holding_level_counts_as_settled() -> None:
     tests = three(dt.date(2024, 1, 1), 120, (9.0, 9.0, 9.0))
-    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, tests=tests)
+    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, samples=tests)
     assert read.settled
 
 
 def test_everything_true_at_once_allows_the_system_off() -> None:
     tests = three(dt.date(2023, 1, 1), 120, (10.0, 9.0, 8.0))
-    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, tests=tests)
+    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, samples=tests)
     assert read.is_allowed
     assert read.missing == ()
     assert "may be turned off" in str(read)
@@ -106,30 +106,30 @@ def test_only_the_three_most_recent_tests_are_read() -> None:
         a_sample(dt.date(2019, 1, 1), 90.0),
         *three(dt.date(2023, 1, 1), 120, (10.0, 9.0, 8.0)),
     ]
-    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, tests=tests)
+    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, samples=tests)
     assert read.is_allowed
-    assert len(read.tests) == 4
+    assert len(read.samples) == 4
 
 
 def test_the_tests_are_read_in_date_order_however_they_arrive() -> None:
     tests = list(reversed(three(dt.date(2023, 1, 1), 120, (10.0, 9.0, 8.0))))
-    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, tests=tests)
-    assert [test.on for test in read.tests] == sorted(test.on for test in tests)
+    read = case(XXX, closed_on=CLOSED, asked_on=ASKED, samples=tests)
+    assert [test.on for test in read.samples] == sorted(test.on for test in tests)
     assert read.is_allowed
 
 
 def test_a_day_before_the_site_closed_is_refused() -> None:
     with pytest.raises(RuleError, match="before the site closed"):
-        case(XXX, closed_on=CLOSED, asked_on=dt.date(2000, 1, 1), tests=[])
+        case(XXX, closed_on=CLOSED, asked_on=dt.date(2000, 1, 1), samples=[])
 
 
 def test_the_years_are_counted_from_closure_and_not_from_the_last_load() -> None:
-    read = case(XXX, closed_on=CLOSED, asked_on=CLOSED, tests=[])
+    read = case(XXX, closed_on=CLOSED, asked_on=CLOSED, samples=[])
     assert read.years_closed == pytest.approx(0.0)
     assert YEARS_CLOSED == 15
 
 
 def test_a_case_that_fails_says_everything_that_is_missing() -> None:
-    read = case(XXX, closed_on=dt.date(2020, 1, 1), asked_on=ASKED, tests=[])
+    read = case(XXX, closed_on=dt.date(2020, 1, 1), asked_on=ASKED, samples=[])
     assert len(read.missing) == 2
     assert str(read).startswith("not yet: ")

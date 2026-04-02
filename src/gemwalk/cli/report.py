@@ -7,7 +7,7 @@ import datetime as dt
 import click
 
 from gemwalk.cli.support import DAY, Ledger, line, pass_ledger, show
-from gemwalk.clock import Month, Quarter
+from gemwalk.clock import Month, Quarter, read_day
 from gemwalk.nmoc import Inputs, needed, rate
 from gemwalk.report.annual import annual_report
 from gemwalk.report.compliance import compliance_report
@@ -104,6 +104,45 @@ def report_rate(
         line("  over the emission threshold but under the design capacity, so not required")
     else:
         line("  under the emission threshold, so not required")
+
+
+@report.command("removal")
+@click.argument("site")
+@click.option("--on", type=DAY, required=True, help="the day to ask about")
+@click.option("--acceptance", type=float, required=True, help="average tonnes a year")
+@click.option("--age", type=float, required=True, help="years since the first load")
+@click.option(
+    "--sample",
+    "samples",
+    nargs=2,
+    multiple=True,
+    metavar="DAY PPMV",
+    help="a measured concentration and the day it was taken, given more than once",
+)
+@pass_ledger
+def report_removal(
+    ledger: Ledger,
+    site: str,
+    on: dt.date,
+    acceptance: float,
+    age: float,
+    samples: tuple[tuple[str, str], ...],
+) -> None:
+    """Say whether the collection system may be turned off, and what is missing."""
+    taken = [
+        (
+            read_day(day),
+            rate(Inputs(acceptance=acceptance, age=age).measure_concentration(float(ppmv))),
+        )
+        for day, ppmv in samples
+    ]
+    read = ledger.office.sites.removal_case(site, on, taken)
+    subpart = ledger.office.sites.standard_of(site)
+    line(f"closed {read.years_closed:.1f} years, {len(read.samples)} samples on file")
+    for sample in read.samples:
+        under = "under" if sample.under(subpart) else "over"
+        line(f"  {sample.on}  {sample.estimate.megagrams:,.1f} Mg a year, {under}")
+    line(str(read))
 
 
 @report.command("due")
