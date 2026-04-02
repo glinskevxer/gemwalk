@@ -29,6 +29,7 @@ LAYERS: dict[str, int] = {
     "design": 2,
     "tuning": 2,
     "spread": 0,
+    "removal": 1,
     "model": 1,
     "store": 2,
     "service": 3,
