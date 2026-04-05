@@ -53,6 +53,7 @@ jobs:
       - run: python -m gemwalk.tools.schema_dump --check
       - run: python -m gemwalk.tools.build_rules --check
       - run: python -m gemwalk.tools.build_glossary --check
+      - run: python -m gemwalk.tools.build_design --check
       - run: python -m gemwalk.tools.release_check
 
   tests:

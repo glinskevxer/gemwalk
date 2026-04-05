@@ -33,6 +33,7 @@ done
 run schema_dump "$python" -m gemwalk.tools.schema_dump --check
 run build_glossary "$python" -m gemwalk.tools.build_glossary --check
 run build_rules "$python" -m gemwalk.tools.build_rules --check
+run build_design "$python" -m gemwalk.tools.build_design --check
 
 echo "tests"
 run pytest "$python" -m pytest -q "$@"

@@ -16,7 +16,7 @@ from gemwalk.tools.check_package import pyproject
 from gemwalk.tools.walker import repo_root, report
 
 REQUIRED = ("README.md", "CHANGELOG.md", "constraints.txt", "check.sh", "migrations.lock")
-DOCUMENTS = ("docs/schema.sql", "docs/rules.md", "docs/glossary.md")
+DOCUMENTS = ("docs/schema.sql", "docs/rules.md", "docs/glossary.md", "docs/design.md")
 
 
 def missing_files() -> list[str]:
