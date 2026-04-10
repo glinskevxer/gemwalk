@@ -509,6 +509,26 @@ M016 = Migration(
     """,
 )
 
+M017 = Migration(
+    number=17,
+    name="notes anybody can put against anything in the book",
+    script="""
+    CREATE TABLE memo (
+      id       INTEGER PRIMARY KEY AUTOINCREMENT,
+      site     TEXT NOT NULL REFERENCES site(label),
+      about    TEXT NOT NULL,
+      subject  TEXT NOT NULL,
+      at       TEXT NOT NULL,
+      by_whom  TEXT NOT NULL,
+      body     TEXT NOT NULL
+    );
+
+    CREATE INDEX memo_by_site ON memo(site);
+    CREATE INDEX memo_by_subject ON memo(subject);
+    CREATE INDEX memo_by_at ON memo(at);
+    """,
+)
+
 MIGRATIONS: tuple[Migration, ...] = (
     M001,
     M002,
@@ -526,6 +546,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     M014,
     M015,
     M016,
+    M017,
 )
 
 

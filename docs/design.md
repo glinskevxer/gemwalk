@@ -25,6 +25,7 @@ they are for.
 - **`gemwalk.model.instrument`** — The instruments, and the calibration a reading is only as good as.
 - **`gemwalk.model.landfill`** — The landfill, and the areas waste was put into.
 - **`gemwalk.model.liquids`** — Liquid in the wells, and the condensate that comes back down the pipe.
+- **`gemwalk.model.memo`** — A note anybody can put against anything in the book.
 - **`gemwalk.model.observation`** — Standing and watching a flare for smoke, which is a rule about minutes.
 - **`gemwalk.model.piping`** — The pipe between a wellhead and the blower.
 - **`gemwalk.model.plant`** — The blower station, the devices that burn the gas, and their operating record.
@@ -50,6 +51,7 @@ they are for.
 - **`gemwalk.store.labels`** — The rows behind the label counters.
 - **`gemwalk.store.liquids`** — Rows of the sump, level and pumpout tables.
 - **`gemwalk.store.maintenance`** — Looking after the book itself: checking it, tidying it, copying it.
+- **`gemwalk.store.memos`** — Rows of the memo table.
 - **`gemwalk.store.migrations`** — The schema, written as a list of migrations that only ever grows.
 - **`gemwalk.store.observations`** — Rows of the observation table.
 - **`gemwalk.store.piping`** — Rows of the header and lateral tables.
