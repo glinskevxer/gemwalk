@@ -14,6 +14,7 @@ from gemwalk.cli import (
     cover,
     instrument,
     landfill,
+    memo,
     monitoring,
     plant,
     records,
@@ -37,6 +38,7 @@ GROUPS: dict[str, click.Group] = {
     "report": report.report,
     "meter": instrument.meter,
     "export": sheets.export,
+    "note": memo.note,
 }
 
 

@@ -72,6 +72,7 @@ they are for.
 - **`gemwalk.service.instruments`** — The meters, their calibrations, and whether a reading rests on one.
 - **`gemwalk.service.intake`** — Taking a field sheet in off a spreadsheet instead of typing it again.
 - **`gemwalk.service.liquids`** — Dewatering: what is under water, what needs pumping, and what was hauled.
+- **`gemwalk.service.memos`** — Writing notes, and finding the one somebody half remembers.
 - **`gemwalk.service.monitoring`** — Walking the wellfield: opening a run, reading each wellhead, closing it.
 - **`gemwalk.service.office`** — One place every desk is made, so nothing makes its own.
 - **`gemwalk.service.piping`** — Laying pipe, tying devices into it, and pulling it back out.
@@ -99,6 +100,7 @@ they are for.
 - **`gemwalk.cli.instrument`** — Commands for the meters and the calibrations behind every reading.
 - **`gemwalk.cli.landfill`** — Commands for the landfill itself and the ground inside its fence.
 - **`gemwalk.cli.main`** — The top level command, and the book every group works through.
+- **`gemwalk.cli.memo`** — Commands for the notes anybody puts against anything.
 - **`gemwalk.cli.monitoring`** — Commands for the monthly monitoring run.
 - **`gemwalk.cli.plant`** — Commands for the blower station and for the liquids that come back.
 - **`gemwalk.cli.records`** — Commands for the compliance clocks and the work orders raised off them.

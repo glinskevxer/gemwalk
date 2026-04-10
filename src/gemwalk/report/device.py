@@ -19,6 +19,7 @@ from __future__ import annotations
 import datetime as dt
 
 from gemwalk.assess import assess
+from gemwalk.clock import show_moment
 from gemwalk.report.frame import Align, Column, Report, Table, number, share
 from gemwalk.service.office import Office
 
@@ -37,6 +38,7 @@ def device_report(office: Office, label: str, *, on: dt.date | None = None) -> R
     _findings(office, report, label, day)
     _water(office, report, label)
     _work(office, report, label)
+    _notes(office, report, label)
     return report
 
 
@@ -167,6 +169,18 @@ def _water(office: Office, report: Report, label: str) -> None:
             share(level.submerged_share(device)),
             "yes" if level.pumped else "no",
         )
+    section.table(table)
+
+
+def _notes(office: Office, report: Report, label: str) -> None:
+    section = report.section("what anybody wrote down about it")
+    table = Table(
+        columns=(Column("when"), Column("who"), Column("what they wrote")),
+        empty="nobody has written anything down about it",
+    )
+    zone = office.sites.zone_of(office.wellfield.devices.get(label).site)
+    for memo in office.memos.about(label):
+        table.add(show_moment(memo.at, zone), memo.by_whom, memo.first_line)
     section.table(table)
 
 

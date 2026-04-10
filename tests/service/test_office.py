@@ -36,6 +36,7 @@ def test_every_desk_is_on_the_same_book(office: Office) -> None:
         office.plant,
         office.liquids,
         office.work,
+        office.memos,
     ]
     assert all(desk.book is office.book for desk in desks)
     office.close()

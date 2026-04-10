@@ -4,6 +4,7 @@ from gemwalk.service.compliance import ComplianceDesk
 from gemwalk.service.instruments import InstrumentDesk
 from gemwalk.service.intake import IntakeDesk
 from gemwalk.service.liquids import LiquidsDesk
+from gemwalk.service.memos import MemoDesk
 from gemwalk.service.monitoring import MonitoringDesk
 from gemwalk.service.office import Office
 from gemwalk.service.piping import PipingDesk
@@ -18,6 +19,7 @@ __all__ = [
     "InstrumentDesk",
     "IntakeDesk",
     "LiquidsDesk",
+    "MemoDesk",
     "MonitoringDesk",
     "Office",
     "PipingDesk",

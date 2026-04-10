@@ -19,6 +19,7 @@ from gemwalk.service.compliance import ComplianceDesk
 from gemwalk.service.instruments import InstrumentDesk
 from gemwalk.service.intake import IntakeDesk
 from gemwalk.service.liquids import LiquidsDesk
+from gemwalk.service.memos import MemoDesk
 from gemwalk.service.monitoring import MonitoringDesk
 from gemwalk.service.piping import PipingDesk
 from gemwalk.service.plant import PlantDesk
@@ -46,6 +47,7 @@ class Office:
         self.plant = PlantDesk(book)
         self.liquids = LiquidsDesk(book)
         self.work = WorkDesk(book)
+        self.memos = MemoDesk(book)
 
     @classmethod
     def open(cls, path: str | Path) -> Office:

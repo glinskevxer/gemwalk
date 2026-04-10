@@ -11,6 +11,7 @@ from gemwalk import __version__
 from gemwalk.cli.cover import cover
 from gemwalk.cli.instrument import meter
 from gemwalk.cli.landfill import site
+from gemwalk.cli.memo import note
 from gemwalk.cli.monitoring import run as run_group
 from gemwalk.cli.plant import plant, water
 from gemwalk.cli.records import record, work
@@ -149,6 +150,7 @@ main.add_command(water)
 main.add_command(meter)
 main.add_command(report)
 main.add_command(export)
+main.add_command(note)
 
 
 def run() -> int:
