@@ -35,6 +35,26 @@ IGNORED = {
     "dist",
     "build",
 }
+# Coverage writes its own files into the checkout while the suite runs, so the
+# listing has to leave them out or the watcher reports the measurement rather
+# than the thing being measured.
+MEASUREMENT = (".coverage", "coverage.json", "coverage.xml")
+
+
+def without_coverage() -> dict[str, str]:
+    """The environment with the coverage subprocess hooks taken out.
+
+    A subprocess started while the suite is being measured inherits the hooks
+    that make it write its own coverage file. That file is written from a
+    working directory with no ``pyproject.toml`` in it, so it is statement data
+    where everything else is branch data, and combining the two is an error
+    that surfaces at the end of the whole run with no test named against it.
+    """
+    return {
+        name: value
+        for name, value in {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}.items()
+        if not name.startswith("COV_CORE")
+    }
 
 
 def listing(root: Path) -> set[str]:
@@ -43,7 +63,7 @@ def listing(root: Path) -> set[str]:
     for path in root.rglob("*"):
         if any(part in IGNORED for part in path.parts):
             continue
-        if path.is_file():
+        if path.is_file() and not path.name.startswith(MEASUREMENT):
             found.add(str(path.relative_to(root)))
     return found
 
@@ -112,13 +132,25 @@ def test_the_suite_runs_with_the_package_read_only(tmp_path: Path) -> None:
             cwd=tmp_path,
             capture_output=True,
             text=True,
-            env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+            env=without_coverage(),
             check=False,
         )
     finally:
         for path, mode in modes.items():
             path.chmod(mode)
     assert finished.returncode == 0, finished.stderr
+
+
+def test_the_subprocess_environment_carries_no_coverage_hooks() -> None:
+    assert not any(name.startswith("COV_CORE") for name in without_coverage())
+    assert without_coverage()["PYTHONDONTWRITEBYTECODE"] == "1"
+
+
+def test_the_listing_leaves_out_the_measurement_files(tmp_path: Path) -> None:
+    (tmp_path / ".coverage").write_text("x")
+    (tmp_path / "coverage.json").write_text("{}")
+    (tmp_path / "real.py").write_text("x = 1\n")
+    assert listing(tmp_path) == {"real.py"}
 
 
 def test_a_book_opens_by_a_relative_name_in_the_working_directory(
