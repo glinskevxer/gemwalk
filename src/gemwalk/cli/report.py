@@ -13,6 +13,7 @@ from gemwalk.report.annual import annual_report
 from gemwalk.report.compliance import compliance_report
 from gemwalk.report.device import device_report
 from gemwalk.report.monthly import monthly_report
+from gemwalk.service.timeline import count_kinds
 
 
 @click.group()
@@ -55,6 +56,28 @@ def report_year(ledger: Ledger, site: str, year: int) -> None:
 def report_device(ledger: Ledger, label: str, on: dt.date | None) -> None:
     """Print the well card for one device."""
     show(device_report(ledger.office, label, on=on))
+
+
+@report.command("story")
+@click.argument("subject")
+@click.option("--from", "first", type=DAY, default=None, help="the first day to show")
+@click.option("--to", "last", type=DAY, default=None, help="the last day to show")
+@pass_ledger
+def report_story(ledger: Ledger, subject: str, first: dt.date | None, last: dt.date | None) -> None:
+    """Print everything that ever happened to one thing, in order."""
+    desk = ledger.office.timeline
+    events = (
+        desk.between(subject, first, last)
+        if first is not None and last is not None
+        else desk.of_subject(subject)
+    )
+    if not events:
+        line(f"nothing has happened to {subject}")
+        return
+    for event in events:
+        line(str(event))
+    tally = count_kinds(events)
+    line("  ".join(f"{kind} {count}" for kind, count in tally.items()))
 
 
 @report.command("rate")

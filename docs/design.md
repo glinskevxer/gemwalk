@@ -80,6 +80,7 @@ they are for.
 - **`gemwalk.service.seed`** — Fill a book with a year of a plausible site, so it can be looked at.
 - **`gemwalk.service.sites`** — Opening a site, cutting it into areas, and closing both.
 - **`gemwalk.service.surface`** — Running a walkover, marking what it finds, and working the marks off.
+- **`gemwalk.service.timeline`** — Everything that ever happened to one thing, in the order it happened.
 - **`gemwalk.service.wellfield`** — Drilling a device, wiring it up, taking it off the run and giving it up.
 - **`gemwalk.service.work`** — Raising work orders, handing them out and closing them off.
 

@@ -206,3 +206,28 @@ def test_three_good_samples_let_a_closed_site_turn_off(cli: Shell) -> None:
     assert "3 samples on file" in out
     assert "may be turned off" in out
     assert "under" in out
+
+
+def test_the_story_of_a_well_prints_in_order(cli: Shell) -> None:
+    walk(cli, "2025-04-08")
+    out = cli.ok("report", "story", "VW-001")
+    assert "drilled" in out
+    assert "connected" in out
+    assert "read" in out
+    assert out.index("drilled") < out.index("read")
+
+
+def test_the_story_can_be_narrowed_to_a_range(cli: Shell) -> None:
+    walk(cli, "2025-04-08")
+    out = cli.ok("report", "story", "VW-001", "--from", "2025-04-01", "--to", "2025-04-30")
+    assert "read" in out
+    assert "drilled" not in out
+
+
+def test_a_range_with_nothing_in_it_says_so(cli: Shell) -> None:
+    out = cli.ok("report", "story", "VW-001", "--from", "2030-01-01", "--to", "2030-12-31")
+    assert "nothing has happened to VW-001" in out
+
+
+def test_the_story_of_something_that_is_not_a_device_is_refused(cli: Shell) -> None:
+    assert "A-03" in cli.fails("report", "story", "A-03")

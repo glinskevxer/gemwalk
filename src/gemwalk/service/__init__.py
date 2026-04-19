@@ -11,6 +11,7 @@ from gemwalk.service.piping import PipingDesk
 from gemwalk.service.plant import PlantDesk
 from gemwalk.service.sites import SiteDesk
 from gemwalk.service.surface import SurfaceDesk
+from gemwalk.service.timeline import TimelineDesk
 from gemwalk.service.wellfield import WellfieldDesk
 from gemwalk.service.work import WorkDesk
 
@@ -26,6 +27,7 @@ __all__ = [
     "PlantDesk",
     "SiteDesk",
     "SurfaceDesk",
+    "TimelineDesk",
     "WellfieldDesk",
     "WorkDesk",
 ]
