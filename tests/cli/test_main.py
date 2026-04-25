@@ -157,3 +157,76 @@ def test_rows_comes_back_biggest_first(runner: CliRunner, tmp_path: Path) -> Non
     result = invoke(runner, book, "store", "rows")
     assert result.exit_code == 0
     assert result.output.index("reading") < result.output.index("site")
+
+
+def test_check_names_the_migrations_a_book_is_missing(
+    runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from gemwalk.store.migrations import Migration
+
+    book = tmp_path / "northridge.sqlite3"
+    invoke(runner, book, "store", "init")
+    extra = Migration(99, "one more", "CREATE TABLE later (x TEXT);")
+    # Opening the book migrates it, so the only way to be behind by the time
+    # the command runs is for the package to have grown a migration the book
+    # has not seen, which is what this stands in for.
+    monkeypatch.setattr("gemwalk.cli.main.pending", lambda _: [extra])
+    result = invoke(runner, book, "store", "check")
+    assert result.exit_code != 0
+    assert "missing migrations" in result.output
+
+
+def test_verify_refuses_a_book_with_a_row_pointing_at_nothing(
+    runner: CliRunner, tmp_path: Path
+) -> None:
+    from gemwalk.store.book import Book
+
+    book = tmp_path / "northridge.sqlite3"
+    invoke(runner, book, "store", "init")
+    with Book.open(book) as opened:
+        opened.execute("PRAGMA foreign_keys = OFF")
+        opened.execute(
+            "INSERT INTO area (label, site, name, acres, first_waste, cover) "
+            "VALUES ('A-99', 'NOWHERE', 'phase 99', 4.0, '2020-01-01', 'daily')"
+        )
+    result = invoke(runner, book, "store", "verify")
+    assert result.exit_code != 0
+    assert "not sound" in result.output
+    assert "points at a site that is not there" in result.output
+
+
+def test_the_console_script_prints_a_refusal_without_a_traceback(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    book = tmp_path / "northridge.sqlite3"
+    monkeypatch.setattr("sys.argv", ["gemwalk", "--book", str(book), "site", "show", "NOWHERE"])
+    assert run() != 0
+    assert "NOWHERE" in capsys.readouterr().err + capsys.readouterr().out
+
+
+def test_the_console_script_turns_a_bare_refusal_into_a_message(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from gemwalk.errors import RuleError
+
+    def angry(**_: object) -> None:
+        raise RuleError("something", "went wrong")
+
+    monkeypatch.setattr("gemwalk.cli.main.main.main", angry)
+    monkeypatch.setattr("sys.argv", ["gemwalk", "about"])
+    assert run() == 1
+    assert "error: something: went wrong" in capsys.readouterr().err
+
+
+def test_the_console_script_says_so_when_it_is_stopped(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import click
+
+    def stopped(**_: object) -> None:
+        raise click.Abort
+
+    monkeypatch.setattr("gemwalk.cli.main.main.main", stopped)
+    monkeypatch.setattr("sys.argv", ["gemwalk", "about"])
+    assert run() == 1
+    assert "aborted" in capsys.readouterr().err
