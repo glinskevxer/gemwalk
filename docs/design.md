@@ -77,6 +77,7 @@ they are for.
 - **`gemwalk.service.office`** — One place every desk is made, so nothing makes its own.
 - **`gemwalk.service.piping`** — Laying pipe, tying devices into it, and pulling it back out.
 - **`gemwalk.service.plant`** — The blower station: what ran, how hot, and what was down.
+- **`gemwalk.service.review`** — Reading a book for the things that are true of it and should not be.
 - **`gemwalk.service.seed`** — Fill a book with a year of a plausible site, so it can be looked at.
 - **`gemwalk.service.sites`** — Opening a site, cutting it into areas, and closing both.
 - **`gemwalk.service.surface`** — Running a walkover, marking what it finds, and working the marks off.

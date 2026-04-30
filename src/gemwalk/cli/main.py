@@ -20,6 +20,7 @@ from gemwalk.cli.sheets import export
 from gemwalk.cli.support import DeskGroup, Ledger, line, pass_ledger, rows
 from gemwalk.cli.wellfield import pipe, well
 from gemwalk.errors import GemwalkError
+from gemwalk.service.review import review, serious
 from gemwalk.service.seed import seed
 from gemwalk.store.maintenance import copy_to, health, row_counts, tidy
 from gemwalk.store.migrations import MIGRATIONS, pending, version
@@ -115,6 +116,21 @@ def store_rows(ledger: Ledger) -> None:
     """Say how many rows are in each table, biggest first."""
     counts = row_counts(ledger.office.book)
     rows(("table", "rows"), [(name, str(count)) for name, count in counts.items()])
+
+
+@store.command("review")
+@click.argument("site")
+@click.option("--serious", "only_serious", is_flag=True, help="only what cannot be defended")
+@pass_ledger
+def store_review(ledger: Ledger, site: str, only_serious: bool) -> None:
+    """Read a site's records for what should not be true of them."""
+    found = serious(ledger.office, site) if only_serious else review(ledger.office, site)
+    if not found:
+        line("nothing about these records looks wrong")
+        return
+    line(f"{len(found)} things to look at")
+    for finding in found:
+        line(f"  {finding}")
 
 
 @store.command("seed")

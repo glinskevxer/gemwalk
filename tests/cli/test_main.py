@@ -230,3 +230,64 @@ def test_the_console_script_says_so_when_it_is_stopped(
     monkeypatch.setattr("sys.argv", ["gemwalk", "about"])
     assert run() == 1
     assert "aborted" in capsys.readouterr().err
+
+
+def test_review_says_a_seeded_book_looks_right(runner: CliRunner, tmp_path: Path) -> None:
+    book = tmp_path / "northridge.sqlite3"
+    invoke(runner, book, "store", "seed")
+    result = invoke(runner, book, "store", "review", "NORTHRIDGE")
+    assert result.exit_code == 0
+    assert "nothing about these records looks wrong" in result.output
+
+
+def test_review_names_what_is_wrong(runner: CliRunner, tmp_path: Path) -> None:
+    book = tmp_path / "northridge.sqlite3"
+    invoke(runner, book, "store", "init")
+    invoke(
+        runner,
+        book,
+        "site",
+        "open",
+        "NORTHRIDGE",
+        "Northridge",
+        "--subpart",
+        "XXX",
+        "--permit",
+        "p",
+        "--zone",
+        "UTC",
+        "--capacity",
+        "1",
+        "--opened",
+        "2000-01-01",
+    )
+    result = invoke(runner, book, "store", "review", "NORTHRIDGE")
+    assert result.exit_code == 0
+    assert "3 things to look at" in result.output
+    assert "burn the gas" in result.output
+
+
+def test_review_can_be_narrowed_to_the_serious_ones(runner: CliRunner, tmp_path: Path) -> None:
+    book = tmp_path / "northridge.sqlite3"
+    invoke(runner, book, "store", "init")
+    invoke(
+        runner,
+        book,
+        "site",
+        "open",
+        "NORTHRIDGE",
+        "Northridge",
+        "--subpart",
+        "XXX",
+        "--permit",
+        "p",
+        "--zone",
+        "UTC",
+        "--capacity",
+        "1",
+        "--opened",
+        "2000-01-01",
+    )
+    result = invoke(runner, book, "store", "review", "NORTHRIDGE", "--serious")
+    assert result.exit_code == 0
+    assert "1 things to look at" in result.output
