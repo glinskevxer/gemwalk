@@ -529,6 +529,29 @@ M017 = Migration(
     """,
 )
 
+M018 = Migration(
+    number=18,
+    name="what the cover itself looks like, which is not what it is emitting",
+    script="""
+    CREATE TABLE fault (
+      label      TEXT PRIMARY KEY,
+      site       TEXT NOT NULL REFERENCES site(label),
+      area       TEXT NOT NULL REFERENCES area(label),
+      kind       TEXT NOT NULL,
+      station    TEXT NOT NULL,
+      extent     REAL NOT NULL,
+      found_on   TEXT NOT NULL,
+      found_by   TEXT NOT NULL,
+      fixed_on   TEXT,
+      note       TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE INDEX fault_by_site ON fault(site);
+    CREATE INDEX fault_by_area ON fault(area);
+    CREATE INDEX fault_by_found ON fault(found_on);
+    """,
+)
+
 MIGRATIONS: tuple[Migration, ...] = (
     M001,
     M002,
@@ -547,6 +570,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     M015,
     M016,
     M017,
+    M018,
 )
 
 

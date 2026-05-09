@@ -22,6 +22,7 @@ they are for.
 - **`gemwalk.model`** — The things the field desk keeps records about.
 - **`gemwalk.model.device`** — The devices sunk into the refuse, and the states one goes through.
 - **`gemwalk.model.exceedance`** — The clock a bad wellhead reading starts, and how it is walked.
+- **`gemwalk.model.fault`** — What the cover itself looks like, which is not what it is emitting.
 - **`gemwalk.model.instrument`** — The instruments, and the calibration a reading is only as good as.
 - **`gemwalk.model.landfill`** — The landfill, and the areas waste was put into.
 - **`gemwalk.model.liquids`** — Liquid in the wells, and the condensate that comes back down the pipe.
@@ -47,6 +48,7 @@ they are for.
 - **`gemwalk.store.columns`** — Turning the handful of column types the book uses in and out of python.
 - **`gemwalk.store.devices`** — Rows of the device table.
 - **`gemwalk.store.exceedances`** — Rows of the exceedance and recheck tables.
+- **`gemwalk.store.faults`** — Rows of the fault table.
 - **`gemwalk.store.instruments`** — Rows of the instrument and calibration tables.
 - **`gemwalk.store.labels`** — The rows behind the label counters.
 - **`gemwalk.store.liquids`** — Rows of the sump, level and pumpout tables.

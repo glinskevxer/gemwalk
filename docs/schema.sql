@@ -1,4 +1,4 @@
--- The schema as sqlite holds it at migration 17.
+-- The schema as sqlite holds it at migration 18.
 -- Written by gemwalk.tools.schema_dump. Do not edit: add a migration.
 
 CREATE TABLE area (
@@ -73,6 +73,19 @@ CREATE TABLE exceedance (
       stage       TEXT NOT NULL,
       closed_on   TEXT,
       note        TEXT NOT NULL DEFAULT ''
+    );
+
+CREATE TABLE fault (
+      label      TEXT PRIMARY KEY,
+      site       TEXT NOT NULL REFERENCES site(label),
+      area       TEXT NOT NULL REFERENCES area(label),
+      kind       TEXT NOT NULL,
+      station    TEXT NOT NULL,
+      extent     REAL NOT NULL,
+      found_on   TEXT NOT NULL,
+      found_by   TEXT NOT NULL,
+      fixed_on   TEXT,
+      note       TEXT NOT NULL DEFAULT ''
     );
 
 CREATE TABLE header (
@@ -344,6 +357,12 @@ CREATE INDEX exceedance_by_reading ON exceedance(reading);
 CREATE INDEX exceedance_by_site ON exceedance(site);
 
 CREATE INDEX exceedance_by_stage ON exceedance(stage);
+
+CREATE INDEX fault_by_area ON fault(area);
+
+CREATE INDEX fault_by_found ON fault(found_on);
+
+CREATE INDEX fault_by_site ON fault(site);
 
 CREATE INDEX header_by_site ON header(site);
 
