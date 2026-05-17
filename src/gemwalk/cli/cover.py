@@ -8,6 +8,7 @@ import click
 
 from gemwalk.cli.support import DAY, Ledger, line, pass_ledger, rows
 from gemwalk.clock import Quarter
+from gemwalk.model.fault import Damage
 from gemwalk.model.landfill import Cover
 from gemwalk.model.surface import Step
 
@@ -124,6 +125,99 @@ def cover_remonitor(ledger: Ledger, hit: str, reading: float, on: dt.date, note:
         line(f"{after.label} closed on {after.closed_on}")
         return
     line(f"{after.label} still over, attempt {after.attempt}, {after.step} by {after.due(subpart)}")
+
+
+@cover.command("fault")
+@click.argument("area")
+@click.argument("station")
+@click.option(
+    "--kind",
+    type=click.Choice([k.name.lower() for k in Damage]),
+    required=True,
+    help="what is wrong with the cover",
+)
+@click.option("--extent", type=float, required=True, help="how big it is, in square feet")
+@click.option("--on", type=DAY, required=True, help="the day it was found")
+@click.option("--by", "found_by", required=True, help="who found it")
+@click.option("--note", default="", help="anything worth writing down")
+@pass_ledger
+def cover_fault(
+    ledger: Ledger,
+    area: str,
+    station: str,
+    kind: str,
+    extent: float,
+    on: dt.date,
+    found_by: str,
+    note: str,
+) -> None:
+    """Write down something wrong with the cover."""
+    fault = ledger.office.surface.find_fault(
+        area, Damage[kind.upper()], station, extent=extent, on=on, found_by=found_by, note=note
+    )
+    urgency = "urgent" if fault.is_urgent else "ordinary"
+    line(f"{fault.label}: {urgency}, {fault.window} days, due {fault.due}")
+
+
+@cover.command("fixed")
+@click.argument("label")
+@click.option("--on", type=DAY, required=True, help="the day the work was done")
+@click.option("--note", default="", help="what was actually done")
+@pass_ledger
+def cover_fixed(ledger: Ledger, label: str, on: dt.date, note: str) -> None:
+    """Record the cover work that put a fault right."""
+    fault = ledger.office.surface.fix_fault(label, on, note)
+    late = (
+        " after its date"
+        if fault.fixed_on and fault.fixed_on > (fault.found_on + dt.timedelta(days=fault.window))
+        else ""
+    )
+    line(f"{fault.label} fixed on {fault.fixed_on}{late}")
+
+
+@cover.command("faults")
+@click.argument("site")
+@click.option("--on", type=DAY, required=True, help="the day to measure against")
+@pass_ledger
+def cover_faults(ledger: Ledger, site: str, on: dt.date) -> None:
+    """List everything wrong with the cover, the least time left first."""
+    desk = ledger.office.surface
+    open_now = desk.open_faults(site, on)
+    if not open_now:
+        line("nothing is wrong with the cover")
+        return
+    late = {fault.label for fault in desk.late_faults(site, on)}
+    rows(
+        ("fault", "area", "kind", "where", "size", "found", "due", "days", ""),
+        [
+            (
+                fault.label,
+                fault.area,
+                str(fault.kind),
+                fault.station,
+                f"{fault.extent:g}",
+                str(fault.found_on),
+                str(fault.due),
+                str(fault.days_left(on)),
+                "late" if fault.label in late else "",
+            )
+            for fault in open_now
+        ],
+    )
+
+
+@cover.command("history")
+@click.argument("site")
+@click.argument("station")
+@pass_ledger
+def cover_history(ledger: Ledger, site: str, station: str) -> None:
+    """List every fault ever found at one place on the cover."""
+    found = ledger.office.surface.faults_at(site, station)
+    if not found:
+        line(f"nothing has ever been found at {station}")
+        return
+    for fault in found:
+        line(str(fault))
 
 
 @cover.command("pattern")

@@ -80,6 +80,7 @@ SERIES: dict[str, Series] = {
     "sump": Series("sump", "CS", 3, Scope.FOREVER),
     "rework": Series("rework", "RW", 3, Scope.YEAR),
     "watch": Series("watch", "VE", 3, Scope.YEAR),
+    "fault": Series("fault", "CF", 3, Scope.YEAR),
 }
 
 

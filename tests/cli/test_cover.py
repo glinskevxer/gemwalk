@@ -221,3 +221,127 @@ def test_the_route_says_how_many_acres_were_crossed(cli: Shell) -> None:
     cli.ok("cover", "cross", walk, "A-03-L01")
     out = cli.ok("cover", "route", walk)
     assert "of 12.4 acres crossed" in out
+
+
+def test_an_ordinary_fault_gets_the_long_window(cli: Shell) -> None:
+    out = cli.ok(
+        "cover",
+        "fault",
+        "A-03",
+        "grid 14-J",
+        "--kind",
+        "settlement",
+        "--extent",
+        "120",
+        "--on",
+        "2025-05-13",
+        "--by",
+        "T. Wierzbicki",
+    )
+    assert "ordinary, 30 days, due 2025-06-12" in out
+
+
+def test_exposed_refuse_gets_the_short_window(cli: Shell) -> None:
+    out = cli.ok(
+        "cover",
+        "fault",
+        "A-03",
+        "grid 21-C",
+        "--kind",
+        "exposed",
+        "--extent",
+        "2",
+        "--on",
+        "2025-05-13",
+        "--by",
+        "T. Wierzbicki",
+    )
+    assert "urgent, 10 days" in out
+
+
+def test_a_sound_cover_says_so(cli: Shell) -> None:
+    assert "nothing is wrong with the cover" in cli.ok(
+        "cover", "faults", "NORTHRIDGE", "--on", "2025-05-20"
+    )
+
+
+def test_a_late_fault_is_flagged(cli: Shell) -> None:
+    cli.ok(
+        "cover",
+        "fault",
+        "A-03",
+        "grid 21-C",
+        "--kind",
+        "crack",
+        "--extent",
+        "2",
+        "--on",
+        "2025-05-13",
+        "--by",
+        "T. Wierzbicki",
+    )
+    out = cli.ok("cover", "faults", "NORTHRIDGE", "--on", "2025-06-01")
+    assert "late" in out
+
+
+def test_a_fixed_fault_leaves_the_list(cli: Shell) -> None:
+    cli.ok(
+        "cover",
+        "fault",
+        "A-03",
+        "grid 14-J",
+        "--kind",
+        "settlement",
+        "--extent",
+        "120",
+        "--on",
+        "2025-05-13",
+        "--by",
+        "T. Wierzbicki",
+    )
+    out = cli.ok("cover", "fixed", "CF-2025-001", "--on", "2025-05-20", "--note", "regraded")
+    assert "fixed on 2025-05-20" in out
+    assert "nothing is wrong" in cli.ok("cover", "faults", "NORTHRIDGE", "--on", "2025-05-21")
+
+
+def test_a_fault_fixed_after_its_date_says_so(cli: Shell) -> None:
+    cli.ok(
+        "cover",
+        "fault",
+        "A-03",
+        "grid 21-C",
+        "--kind",
+        "crack",
+        "--extent",
+        "2",
+        "--on",
+        "2025-05-13",
+        "--by",
+        "T. Wierzbicki",
+    )
+    out = cli.ok("cover", "fixed", "CF-2025-001", "--on", "2025-06-01")
+    assert "after its date" in out
+
+
+def test_a_place_nothing_was_found_at_says_so(cli: Shell) -> None:
+    assert "nothing has ever been found" in cli.ok("cover", "history", "NORTHRIDGE", "grid 99-Z")
+
+
+def test_the_history_of_a_place_lists_its_faults(cli: Shell) -> None:
+    cli.ok(
+        "cover",
+        "fault",
+        "A-03",
+        "grid 14-J",
+        "--kind",
+        "settlement",
+        "--extent",
+        "120",
+        "--on",
+        "2025-05-13",
+        "--by",
+        "T. Wierzbicki",
+    )
+    out = cli.ok("cover", "history", "NORTHRIDGE", "grid 14-J")
+    assert "CF-2025-001" in out
+    assert "settlement at grid 14-J" in out

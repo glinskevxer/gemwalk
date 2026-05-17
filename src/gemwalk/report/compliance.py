@@ -31,6 +31,7 @@ def compliance_report(office: Office, site: str, quarter: Quarter) -> Report:
     )
     _monitoring_section(office, report, site, quarter)
     _surface_section(office, report, site, quarter)
+    _cover_section(office, report, site, day)
     _records_section(office, report, site, day)
     _work_section(office, report, site, day)
     _instrument_section(office, report, site, day)
@@ -145,6 +146,37 @@ def _surface_section(office: Office, report: Report, site: str, quarter: Quarter
             hit.due(subpart),
         )
     section.table(spots)
+
+
+def _cover_section(office: Office, report: Report, site: str, day: dt.date) -> None:
+    section = report.section("the cover itself")
+    open_now = office.surface.open_faults(site, day)
+    section.say(f"{len(open_now)} faults open on the cover")
+    table = Table(
+        columns=(
+            Column("fault"),
+            Column("area"),
+            Column("kind"),
+            Column("where"),
+            Column("size", Align.RIGHT),
+            Column("found"),
+            Column("due"),
+            Column("late"),
+        ),
+        empty="nothing is wrong with the cover",
+    )
+    for fault in open_now:
+        table.add(
+            fault.label,
+            fault.area,
+            str(fault.kind),
+            fault.station,
+            number(fault.extent, 0),
+            fault.found_on,
+            fault.due,
+            "yes" if fault.is_late(day) else "no",
+        )
+    section.table(table)
 
 
 def _records_section(office: Office, report: Report, site: str, day: dt.date) -> None:

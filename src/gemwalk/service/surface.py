@@ -17,12 +17,14 @@ from dataclasses import dataclass
 from gemwalk.clock import Quarter
 from gemwalk.errors import RuleError, StateError
 from gemwalk.ids import Labels
+from gemwalk.model.fault import Damage, Fault
 from gemwalk.model.landfill import Cover
 from gemwalk.model.route import Covered, Leg, Route, pattern_for
 from gemwalk.model.surface import Hit, Step, Walk
 from gemwalk.service.instruments import InstrumentDesk
 from gemwalk.service.sites import SiteDesk
 from gemwalk.store.book import Book
+from gemwalk.store.faults import FaultRepository
 from gemwalk.store.route import CoveredRepository, LegRepository
 from gemwalk.store.surface import HitRepository, WalkRepository
 
@@ -44,6 +46,7 @@ class SurfaceDesk:
         self.book = book
         self.walks = WalkRepository(book)
         self.hits = HitRepository(book)
+        self.faults = FaultRepository(book)
         self.legs = LegRepository(book)
         self.covered = CoveredRepository(book)
         self.sites = SiteDesk(book)
@@ -221,6 +224,57 @@ class SurfaceDesk:
     def covered_whole(self, walk: str) -> bool:
         """True when the walk crossed every leg of every pattern there is."""
         return not self.incomplete(walk)
+
+    def find_fault(
+        self,
+        area: str,
+        kind: Damage,
+        station: str,
+        *,
+        extent: float,
+        on: dt.date,
+        found_by: str,
+        note: str = "",
+    ) -> Fault:
+        """Write down something wrong with the cover."""
+        found = self.sites.areas.get(area)
+        with self.book.writing():
+            fault = Fault(
+                label=self.labels.next("fault", on),
+                site=found.site,
+                area=area,
+                kind=kind,
+                station=station,
+                extent=extent,
+                found_on=on,
+                found_by=found_by,
+                note=note,
+            )
+            return self.faults.add(fault)
+
+    def fix_fault(self, label: str, on: dt.date, note: str = "") -> Fault:
+        """Record the cover work that put a fault right."""
+        fault = self.faults.get(label)
+        with self.book.writing():
+            return self.faults.put(fault.fix(on, note))
+
+    def open_faults(self, site: str, on: dt.date) -> list[Fault]:
+        """Every fault the cover still has, the least time left first."""
+        return sorted(
+            self.faults.open_at(site),
+            key=lambda fault: (fault.days_left(on) or 0, fault.label),
+        )
+
+    def late_faults(self, site: str, on: dt.date) -> list[Fault]:
+        """Every open fault that has gone past its window."""
+        return [fault for fault in self.open_faults(site, on) if fault.is_late(on)]
+
+    def faults_at(self, site: str, station: str) -> list[Fault]:
+        """Every fault ever found at one place on the cover, oldest first."""
+        return sorted(
+            (fault for fault in self.faults.of_site(site) if fault.station == station),
+            key=lambda fault: (fault.found_on, fault.label),
+        )
 
     def board(self, site: str, on: dt.date) -> list[Mark]:
         """Every open spot at a site, the least time left first."""
