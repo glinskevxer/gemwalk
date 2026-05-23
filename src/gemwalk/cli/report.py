@@ -194,6 +194,12 @@ def report_due(ledger: Ledger, site: str, on: dt.date) -> None:
                 f"{mark.hit.label} {mark.hit.station} waiting on a {mark.hit.step}",
             )
         )
+    for fault in office.surface.open_faults(site, on):
+        remaining = fault.days_left(on)
+        if remaining is not None and fault.due is not None:
+            entries.append(
+                (remaining, str(fault.due), f"{fault.label} {fault.kind} at {fault.station}")
+            )
     for ticket in office.work.board(site, on):
         entries.append(
             (

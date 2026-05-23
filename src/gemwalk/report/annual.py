@@ -132,6 +132,21 @@ def _surface(office: Office, report: Report, site: str, year: int) -> None:
         section.say(f"{len(closed)} of them closed, {len(hits) - len(closed)} still open")
         second = [hit for hit in hits if hit.attempt > 1]
         section.say(f"{len(second)} needed more than one go at the cover")
+    faults = office.surface.faults.between_days(site, first.isoformat(), last.isoformat())
+    if faults:
+        fixed = [fault for fault in faults if not fault.is_open]
+        late = [
+            fault
+            for fault in faults
+            if fault.fixed_on is not None
+            and fault.fixed_on > fault.found_on + dt.timedelta(days=fault.window)
+        ]
+        section.say(
+            f"{len(faults)} faults found on the cover, {len(fixed)} fixed, "
+            f"{len(late)} of those after the date they carried"
+        )
+    else:
+        section.say("nothing was found wrong with the cover")
     repeats = office.surface.repeat_stations(site, first)
     table = Table(
         columns=(Column("station"), Column("times marked", Align.RIGHT)),

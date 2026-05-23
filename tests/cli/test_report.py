@@ -231,3 +231,42 @@ def test_a_range_with_nothing_in_it_says_so(cli: Shell) -> None:
 
 def test_the_story_of_something_that_is_not_a_device_is_refused(cli: Shell) -> None:
     assert "A-03" in cli.fails("report", "story", "A-03")
+
+
+def test_the_due_list_carries_the_cover_faults(cli: Shell) -> None:
+    cli.ok(
+        "cover",
+        "fault",
+        "A-03",
+        "grid 14-J",
+        "--kind",
+        "crack",
+        "--extent",
+        "2",
+        "--on",
+        "2025-05-13",
+        "--by",
+        "T. Wierzbicki",
+    )
+    out = cli.ok("report", "due", "NORTHRIDGE", "--on", "2025-05-20")
+    assert "CF-2025-001" in out
+    assert "crack at grid 14-J" in out
+
+
+def test_a_fixed_fault_leaves_the_due_list(cli: Shell) -> None:
+    cli.ok(
+        "cover",
+        "fault",
+        "A-03",
+        "grid 14-J",
+        "--kind",
+        "crack",
+        "--extent",
+        "2",
+        "--on",
+        "2025-05-13",
+        "--by",
+        "T. Wierzbicki",
+    )
+    cli.ok("cover", "fixed", "CF-2025-001", "--on", "2025-05-16")
+    assert "nothing is due" in cli.ok("report", "due", "NORTHRIDGE", "--on", "2025-05-20")

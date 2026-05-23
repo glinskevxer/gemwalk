@@ -136,6 +136,26 @@ def _orders(office: Office, site: str) -> list[Finding]:
     return found
 
 
+def _cover(office: Office, site: str) -> list[Finding]:
+    found: list[Finding] = []
+    for fault in office.surface.faults.open_at(site):
+        if office.sites.areas.find(fault.area) is None:
+            found.append(
+                Finding(Weight.SERIOUS, fault.label, f"open in {fault.area}, which is gone")
+            )
+    for walk in office.surface.walks.of_site(site):
+        for route in office.surface.incomplete(walk.label):
+            if not walk.is_open:
+                found.append(
+                    Finding(
+                        Weight.ODD,
+                        walk.label,
+                        f"finished having missed {len(route.missed)} legs in {route.area}",
+                    )
+                )
+    return found
+
+
 def _shape(office: Office, site: str) -> list[Finding]:
     found: list[Finding] = []
     if not office.sites.areas_of(site):
@@ -155,7 +175,7 @@ def review(office: Office, site: str) -> list[Finding]:
     """Read one site's records for everything that should not be true of them."""
     office.sites.sites.get(site)
     found: list[Finding] = []
-    for reader in (_shape, _piping, _readings, _levels, _records, _orders):
+    for reader in (_shape, _piping, _readings, _levels, _records, _orders, _cover):
         found.extend(reader(office, site))
     order = {Weight.SERIOUS: 0, Weight.ODD: 1}
     return sorted(found, key=lambda f: (order[f.weight], f.about, f.said))
