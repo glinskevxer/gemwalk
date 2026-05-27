@@ -69,9 +69,9 @@ def _findings(office: Office, report: Report, site: str, first: dt.date, last: d
     tally = Table(
         columns=(
             Column("kind"),
-            Column("opened", Align.RIGHT),
-            Column("closed inside the window", Align.RIGHT),
-            Column("still open", Align.RIGHT),
+            Column("opened", Align.RIGHT, adds_up=True),
+            Column("closed inside the window", Align.RIGHT, adds_up=True),
+            Column("still open", Align.RIGHT, adds_up=True),
         ),
         empty="no finding was opened this year",
     )
@@ -182,8 +182,8 @@ def _field(office: Office, report: Report, site: str, day: dt.date) -> None:
         columns=(
             Column("area"),
             Column("acres", Align.RIGHT),
-            Column("devices", Align.RIGHT),
-            Column("wanted", Align.RIGHT),
+            Column("devices", Align.RIGHT, adds_up=True),
+            Column("wanted", Align.RIGHT, adds_up=True),
             Column("covered", Align.RIGHT),
             Column("collection due"),
         ),

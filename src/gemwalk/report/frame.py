@@ -40,6 +40,7 @@ class Column:
     heading: str
     align: Align = Align.LEFT
     blank: str = ""
+    adds_up: bool = False
 
     def cell(self, value: object) -> str:
         """The text of one cell, with the column's own word for nothing."""
@@ -78,12 +79,45 @@ class Table:
         """True when nothing was put on the table."""
         return not self.rows
 
+    def total(self, heading: str) -> float:
+        """Add one column up, skipping anything that is not a number.
+
+        A cell that is not a number is skipped rather than refused, because a
+        column of measurements with one blank in it is an ordinary column and
+        refusing to total it would leave the report with no total at all.
+        """
+        index = self._index(heading)
+        if not self.columns[index].adds_up:
+            raise DesignError(heading, "this column does not add up")
+        running = 0.0
+        for row in self.rows:
+            value = row[index]
+            if isinstance(value, int | float) and not isinstance(value, bool):
+                running += float(value)
+        return running
+
+    def totals(self) -> dict[str, float]:
+        """Every column that adds up, added up."""
+        return {
+            column.heading: self.total(column.heading) for column in self.columns if column.adds_up
+        }
+
+    def _index(self, heading: str) -> int:
+        for index, column in enumerate(self.columns):
+            if column.heading == heading:
+                return index
+        raise DesignError(self.title or "a table", f"has no column called {heading}")
+
     def widths(self) -> list[int]:
         """How wide each column has to be for what is actually in it."""
         widths = [len(column.heading) for column in self.columns]
         for row in self.rows:
             for index, (column, value) in enumerate(zip(self.columns, row, strict=True)):
                 widths[index] = max(widths[index], len(column.cell(value)))
+        if self.totals():
+            for index, column in enumerate(self.columns):
+                if column.adds_up:
+                    widths[index] = max(widths[index], len(f"{self.total(column.heading):g}"))
         return widths
 
     def lines(self) -> list[str]:
@@ -107,6 +141,16 @@ class Table:
                 for column, value, width in zip(self.columns, row, widths, strict=True)
             ]
             out.append(GAP.join(cells).rstrip())
+        if self.totals():
+            out.append(GAP.join(RULE * width for width in widths))
+            footer = [
+                column.align.pad(
+                    f"{self.total(column.heading):g}" if column.adds_up else "",
+                    width,
+                )
+                for column, width in zip(self.columns, widths, strict=True)
+            ]
+            out.append(GAP.join(footer).rstrip())
         return out
 
 

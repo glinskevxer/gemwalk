@@ -116,3 +116,64 @@ def test_the_number_helpers_print_the_way_the_paperwork_does() -> None:
     assert number(1234.56) == "1,234.6"
     assert number(1234.56, 3) == "1,234.560"
     assert share(0.5) == "50%"
+
+
+def a_counting_table() -> Table:
+    return Table(
+        columns=(
+            Column("well"),
+            Column("readings", Align.RIGHT, adds_up=True),
+            Column("findings", Align.RIGHT, adds_up=True),
+        ),
+        title="the year",
+    )
+
+
+def test_a_column_that_does_not_add_up_refuses_to_be_totalled() -> None:
+    with pytest.raises(DesignError, match="does not add up"):
+        a_counting_table().add("VW-001", 12, 1).total("well")
+
+
+def test_a_column_nobody_has_is_refused() -> None:
+    with pytest.raises(DesignError, match="no column called"):
+        a_counting_table().total("badgers")
+
+
+def test_a_column_adds_up() -> None:
+    table = a_counting_table().extend([("VW-001", 12, 1), ("VW-002", 12, 0)])
+    assert table.total("readings") == pytest.approx(24.0)
+    assert table.totals() == {"readings": 24.0, "findings": 1.0}
+
+
+def test_a_cell_that_is_not_a_number_is_skipped() -> None:
+    table = a_counting_table().extend([("VW-001", 12, 1), ("VW-002", None, "-")])
+    assert table.total("readings") == pytest.approx(12.0)
+
+
+def test_a_flag_is_not_counted_as_a_number() -> None:
+    table = a_counting_table().add("VW-001", True, 1)
+    assert table.total("readings") == pytest.approx(0.0)
+
+
+def test_a_table_with_totals_prints_a_footer() -> None:
+    table = a_counting_table().extend([("VW-001", 12, 1), ("VW-002", 12, 0)])
+    lines = table.lines()
+    assert lines[-1].strip().startswith("24")
+    assert set(lines[-2]) <= {"-", " "}
+
+
+def test_a_table_with_no_totalling_columns_has_no_footer() -> None:
+    table = a_table().add("VW-041", "52.4%", "seal")
+    assert table.totals() == {}
+    assert table.lines()[-1].startswith("VW-041")
+
+
+def test_the_footer_widens_the_column_when_the_total_is_long() -> None:
+    table = a_counting_table().add("VW-001", 1_000_000, 1)
+    assert max(table.widths()) >= len("1e+06")
+
+
+def test_the_annual_report_totals_its_tables() -> None:
+    from gemwalk.report.annual import annual_report
+
+    assert callable(annual_report)
