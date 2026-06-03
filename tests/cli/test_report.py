@@ -270,3 +270,44 @@ def test_a_fixed_fault_leaves_the_due_list(cli: Shell) -> None:
     )
     cli.ok("cover", "fixed", "CF-2025-001", "--on", "2025-05-16")
     assert "nothing is due" in cli.ok("report", "due", "NORTHRIDGE", "--on", "2025-05-20")
+
+
+def test_the_plant_report_prints(cli: Shell) -> None:
+    cli.ok(
+        "plant",
+        "install",
+        "CD-01",
+        "NORTHRIDGE",
+        "west flare",
+        "--kind",
+        "enclosed_flare",
+        "--capacity",
+        "2400",
+        "--floor",
+        "1400",
+        "--on",
+        "2016-04-01",
+    )
+    cli.ok(
+        "plant",
+        "log",
+        "CD-01",
+        "2025-06-11 09:00",
+        "--flow",
+        "1180",
+        "--methane",
+        "49.2",
+        "--temp",
+        "1512",
+    )
+    out = cli.ok(
+        "report", "plant", "NORTHRIDGE", "--from", "2025-06-11 00:00", "--to", "2025-06-12 00:00"
+    )
+    assert "plant report" in out
+    assert "what each device did" in out
+    assert "CD-01" in out
+
+
+def test_a_moment_that_is_not_a_moment_is_refused_by_the_plant_report(cli: Shell) -> None:
+    out = cli.fails("report", "plant", "NORTHRIDGE", "--from", "half nine", "--to", "later")
+    assert "2025-04-08 06:30" in out

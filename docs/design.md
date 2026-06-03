@@ -95,6 +95,7 @@ they are for.
 - **`gemwalk.report.device`** — The well card: everything the desk knows about one extraction device.
 - **`gemwalk.report.frame`** — How a report is put together, and how it is printed.
 - **`gemwalk.report.monthly`** — The monthly wellfield report: what was read, what it said, what it started.
+- **`gemwalk.report.plant`** — The operating record of the blower station, read as a period rather than a day.
 - **`gemwalk.report.sheets`** — Sheets: the same records again, in the shape a spreadsheet wants.
 
 ## Layer 5 — The command line

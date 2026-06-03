@@ -6,13 +6,14 @@ import datetime as dt
 
 import click
 
-from gemwalk.cli.support import DAY, Ledger, line, pass_ledger, show
+from gemwalk.cli.support import DAY, Ledger, line, moment_at, pass_ledger, show
 from gemwalk.clock import Month, Quarter, read_day
 from gemwalk.nmoc import Inputs, needed, rate
 from gemwalk.report.annual import annual_report
 from gemwalk.report.compliance import compliance_report
 from gemwalk.report.device import device_report
 from gemwalk.report.monthly import monthly_report
+from gemwalk.report.plant import plant_report
 from gemwalk.service.timeline import count_kinds
 
 
@@ -47,6 +48,18 @@ def report_quarter(ledger: Ledger, site: str, quarter: str) -> None:
 def report_year(ledger: Ledger, site: str, year: int) -> None:
     """Print the annual report."""
     show(annual_report(ledger.office, site, year))
+
+
+@report.command("plant")
+@click.argument("site")
+@click.option("--from", "first", required=True, help="the first moment")
+@click.option("--to", "last", required=True, help="the last moment")
+@pass_ledger
+def report_plant(ledger: Ledger, site: str, first: str, last: str) -> None:
+    """Print the operating report for the blower station."""
+    start = moment_at(ledger, site, first)
+    end = moment_at(ledger, site, last)
+    show(plant_report(ledger.office, site, start, end))
 
 
 @report.command("device")
