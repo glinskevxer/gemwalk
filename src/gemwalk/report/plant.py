@@ -16,17 +16,15 @@ import datetime as dt
 
 from gemwalk.clock import hours_between, show_moment
 from gemwalk.report.frame import Align, Column, Report, Table, number, share
+from gemwalk.report.preamble import headed
 from gemwalk.service.office import Office
 
 
 def plant_report(office: Office, site: str, first: dt.datetime, last: dt.datetime) -> Report:
     """Build the operating report for one site's blower station."""
-    landfill = office.sites.sites.get(site)
-    zone = landfill.zone
-    report = Report(
-        title=f"{landfill.name} plant report",
-        subtitle=f"{show_moment(first, zone)} to {show_moment(last, zone)}, {zone}",
-    )
+    zone = office.sites.zone_of(site)
+    period = f"{show_moment(first, zone)} to {show_moment(last, zone)}, {zone}"
+    report, _ = headed(office, site, "plant report", period)
     _now(office, report, site)
     _devices(office, report, site, first, last, zone)
     _blocks(office, report, site, first, last, zone)

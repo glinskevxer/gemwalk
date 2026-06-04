@@ -16,6 +16,7 @@ from gemwalk.assess import Assessment
 from gemwalk.clock import Month
 from gemwalk.model.reading import Run
 from gemwalk.report.frame import Align, Column, Report, Table, number, share
+from gemwalk.report.preamble import headed
 from gemwalk.service.office import Office
 
 WELLHEAD_COLUMNS = (
@@ -33,12 +34,7 @@ WELLHEAD_COLUMNS = (
 def monthly_report(office: Office, site: str, month: Month, *, on: dt.date | None = None) -> Report:
     """Build the monthly wellfield report for one site."""
     day = on or month.last_day
-    landfill = office.sites.sites.get(site)
-    subpart = office.sites.standard_of(site)
-    report = Report(
-        title=f"{landfill.name} wellfield report",
-        subtitle=f"{month} under {subpart.citation}, permit {landfill.permit}",
-    )
+    report, _ = headed(office, site, "wellfield report", str(month))
     _site_section(office, report, site, day)
     runs = office.monitoring.runs_in(site, month)
     _runs_section(office, report, site, runs)

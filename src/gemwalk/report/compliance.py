@@ -17,18 +17,14 @@ import datetime as dt
 
 from gemwalk.clock import Month, Quarter
 from gemwalk.report.frame import Align, Column, Report, Table, number
+from gemwalk.report.preamble import headed
 from gemwalk.service.office import Office
 
 
 def compliance_report(office: Office, site: str, quarter: Quarter) -> Report:
     """Build the quarterly compliance report for one site."""
-    landfill = office.sites.sites.get(site)
-    subpart = office.sites.standard_of(site)
     day = quarter.last_day
-    report = Report(
-        title=f"{landfill.name} compliance report",
-        subtitle=f"{quarter} under {subpart.citation}, permit {landfill.permit}",
-    )
+    report, _ = headed(office, site, "compliance report", str(quarter))
     _monitoring_section(office, report, site, quarter)
     _surface_section(office, report, site, quarter)
     _cover_section(office, report, site, day)

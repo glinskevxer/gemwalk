@@ -20,20 +20,16 @@ import datetime as dt
 from gemwalk.clock import Month, Quarter
 from gemwalk.model.exceedance import Exceedance
 from gemwalk.report.frame import Align, Column, Report, Table, number, share
+from gemwalk.report.preamble import headed
 from gemwalk.rules import Finding
 from gemwalk.service.office import Office
 
 
 def annual_report(office: Office, site: str, year: int) -> Report:
     """Build the annual report for one site."""
-    landfill = office.sites.sites.get(site)
-    subpart = office.sites.standard_of(site)
     first = dt.date(year, 1, 1)
     last = dt.date(year, 12, 31)
-    report = Report(
-        title=f"{landfill.name} annual report",
-        subtitle=f"{year} under {subpart.citation}, permit {landfill.permit}",
-    )
+    report, _ = headed(office, site, "annual report", str(year))
     _shape(office, report, site, year, first, last)
     _findings(office, report, site, first, last)
     _surface(office, report, site, year)

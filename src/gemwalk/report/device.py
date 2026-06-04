@@ -33,6 +33,7 @@ def device_report(office: Office, label: str, *, on: dt.date | None = None) -> R
         title=f"{device.label} well card",
         subtitle=f"{device.site} area {device.area}, {device.kind}, {subpart.citation}",
     )
+    del subpart
     _construction(office, report, label, day)
     _readings(office, report, label)
     _findings(office, report, label, day)
