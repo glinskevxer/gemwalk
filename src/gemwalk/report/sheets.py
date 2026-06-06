@@ -271,9 +271,137 @@ def calibrations_sheet(office: Office, label: str, zone: str) -> Sheet:
     )
 
 
+def devices_sheet(office: Office, site: str) -> Sheet:
+    """Every device at one site, with its construction and its state."""
+    rows: list[tuple[str, ...]] = []
+    for device in office.wellfield.devices.of_site(site):
+        rows.append(
+            (
+                device.label,
+                device.area,
+                str(device.kind),
+                device.station,
+                f"{device.total_depth:g}",
+                f"{device.screen_top:g}",
+                f"{device.screen_bottom:g}",
+                f"{device.influence:g}",
+                str(device.state),
+                str(device.drilled_on),
+                str(device.connected_on or ""),
+                device.lateral or "",
+                str(device.abandoned_on or ""),
+            )
+        )
+    return _rows(
+        (
+            "device",
+            "area",
+            "kind",
+            "station",
+            "total_depth",
+            "screen_top",
+            "screen_bottom",
+            "influence_ft",
+            "state",
+            "drilled_on",
+            "connected_on",
+            "lateral",
+            "abandoned_on",
+        ),
+        f"devices-{site}",
+        rows,
+    )
+
+
+def faults_sheet(office: Office, site: str) -> Sheet:
+    """Every fault ever found on one site's cover."""
+    rows: list[tuple[str, ...]] = []
+    for fault in office.surface.faults.of_site(site):
+        rows.append(
+            (
+                fault.label,
+                fault.area,
+                str(fault.kind),
+                fault.station,
+                f"{fault.extent:g}",
+                str(fault.found_on),
+                fault.found_by,
+                str(fault.due or ""),
+                str(fault.fixed_on or ""),
+                fault.note,
+            )
+        )
+    return _rows(
+        (
+            "fault",
+            "area",
+            "kind",
+            "station",
+            "square_feet",
+            "found_on",
+            "found_by",
+            "due",
+            "fixed_on",
+            "note",
+        ),
+        f"faults-{site}",
+        rows,
+    )
+
+
+def notes_sheet(office: Office, site: str, zone: str) -> Sheet:
+    """Every note anybody has written at one site."""
+    rows: list[tuple[str, ...]] = []
+    for memo in office.memos.memos.of_site(site):
+        rows.append(
+            (
+                str(memo.id),
+                str(memo.about),
+                memo.subject,
+                show_moment(memo.at, zone),
+                memo.by_whom,
+                memo.body,
+            )
+        )
+    return _rows(("id", "about", "subject", "at", "by", "body"), f"notes-{site}", rows)
+
+
+def everything(office: Office, site: str, on: dt.date) -> list[Sheet]:
+    """Every sheet a site has, for somebody who wants the lot.
+
+    The readings are one sheet per run rather than one sheet for all of them,
+    because a run is the unit somebody works with and a single sheet of every
+    reading a site ever took is a file nobody opens twice.
+    """
+    zone = office.sites.zone_of(site)
+    made = [
+        devices_sheet(office, site),
+        records_sheet(office, site, on),
+        orders_sheet(office, site, dt.date(on.year, 1, 1), on),
+        faults_sheet(office, site),
+        notes_sheet(office, site, zone),
+    ]
+    made.extend(readings_sheet(office, run.label) for run in office.monitoring.runs.of_site(site))
+    made.extend(
+        surface_sheet(office, site, quarter)
+        for quarter in sorted(
+            {Quarter.of(walk.started_on) for walk in office.surface.walks.of_site(site)}
+        )
+    )
+    made.extend(
+        calibrations_sheet(office, meter.label, zone)
+        for meter in office.instruments.instruments.of_site(site)
+    )
+    return [sheet for sheet in made if not sheet.is_empty]
+
+
 __all__ = [
     "Sheet",
     "calibrations_sheet",
+    "devices_sheet",
+    "everything",
+    "faults_sheet",
+    "notes_sheet",
     "orders_sheet",
     "readings_sheet",
     "records_sheet",

@@ -158,3 +158,59 @@ def test_every_sheet_names_itself(office: Office) -> None:
     run = walk_wellfield(office, APRIL)
     assert readings_sheet(office, run).name == f"readings-{run}"
     assert records_sheet(office, SITE, APRIL).name == f"records-{SITE}"
+
+
+def test_the_device_sheet_carries_the_construction(office: Office) -> None:
+    from gemwalk.report.sheets import devices_sheet
+
+    rows = parsed(devices_sheet(office, SITE))
+    assert len(rows) == 4
+    assert rows[0]["device"] == "VW-001"
+    assert rows[0]["screen_top"] == "22"
+    assert rows[0]["state"] == "connected"
+
+
+def test_the_fault_sheet_carries_the_deadline(office: Office) -> None:
+    from gemwalk.model.fault import Damage
+    from gemwalk.report.sheets import faults_sheet
+
+    office.surface.find_fault(
+        "A-03", Damage.CRACK, "grid 14-J", extent=2.0, on=MAY, found_by="T. W."
+    )
+    rows = parsed(faults_sheet(office, SITE))
+    assert rows[0]["kind"] == "crack"
+    assert rows[0]["due"] == "2025-05-23"
+
+
+def test_the_note_sheet_keeps_the_whole_body(office: Office) -> None:
+    from gemwalk.report.sheets import notes_sheet
+
+    office.memos.write(
+        "VW-001",
+        read_moment("2025-04-08 16:20", ZONE),
+        by_whom="D. K.",
+        body="valve seized\nwants a new stem",
+    )
+    rows = parsed(notes_sheet(office, SITE, ZONE))
+    assert rows[0]["body"] == "valve seized\nwants a new stem"
+    assert rows[0]["at"] == "2025-04-08 16:20"
+
+
+def test_everything_leaves_out_the_sheets_with_nothing_on_them(office: Office) -> None:
+    from gemwalk.report.sheets import everything
+
+    made = everything(office, SITE, APRIL)
+    names = {sheet.name for sheet in made}
+    assert f"devices-{SITE}" in names
+    assert all(not sheet.is_empty for sheet in made)
+    assert f"records-{SITE}" not in names
+
+
+def test_everything_carries_one_sheet_for_each_run(office: Office) -> None:
+    from gemwalk.report.sheets import everything
+
+    first = walk_wellfield(office, APRIL)
+    second = walk_wellfield(office, dt.date(2025, 5, 6))
+    names = {sheet.name for sheet in everything(office, SITE, APRIL)}
+    assert f"readings-{first}" in names
+    assert f"readings-{second}" in names

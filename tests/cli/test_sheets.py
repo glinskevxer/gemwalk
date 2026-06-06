@@ -142,3 +142,50 @@ def test_the_calibration_sheet_names_the_meter(cli: Shell) -> None:
 
 def test_a_meter_the_book_never_issued_is_refused(cli: Shell) -> None:
     assert "GEM-999" in cli.fails("export", "calibrations", "GEM-999")
+
+
+def test_the_device_sheet_prints(cli: Shell) -> None:
+    rows = parsed(cli.ok("export", "devices", "NORTHRIDGE"))
+    assert len(rows) == 4
+    assert rows[0]["device"] == "VW-001"
+
+
+def test_the_fault_sheet_prints(cli: Shell) -> None:
+    cli.ok(
+        "cover",
+        "fault",
+        "A-03",
+        "grid 14-J",
+        "--kind",
+        "crack",
+        "--extent",
+        "2",
+        "--on",
+        "2025-05-13",
+        "--by",
+        "T. W.",
+    )
+    rows = parsed(cli.ok("export", "faults", "NORTHRIDGE"))
+    assert rows[0]["station"] == "grid 14-J"
+
+
+def test_the_note_sheet_prints(cli: Shell) -> None:
+    cli.ok("note", "write", "VW-001", "2025-04-08 16:20", "valve seized", "--by", "D. K.")
+    rows = parsed(cli.ok("export", "notes", "NORTHRIDGE"))
+    assert rows[0]["body"] == "valve seized"
+
+
+def test_everything_writes_a_directory_full_of_sheets(cli: Shell, tmp_path: Path) -> None:
+    walk(cli, "2025-04-08")
+    room = tmp_path / "sheets"
+    out = cli.ok("export", "everything", "NORTHRIDGE", "--on", "2025-04-30", "--into", str(room))
+    assert "sheets into" in out
+    written = {path.name for path in room.iterdir()}
+    assert "devices-NORTHRIDGE.csv" in written
+    assert any(name.startswith("readings-") for name in written)
+
+
+def test_everything_makes_the_directory_if_it_is_not_there(cli: Shell, tmp_path: Path) -> None:
+    room = tmp_path / "deep" / "sheets"
+    cli.ok("export", "everything", "NORTHRIDGE", "--on", "2025-04-30", "--into", str(room))
+    assert room.exists()

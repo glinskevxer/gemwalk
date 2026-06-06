@@ -12,6 +12,10 @@ from gemwalk.clock import Quarter
 from gemwalk.report.sheets import (
     Sheet,
     calibrations_sheet,
+    devices_sheet,
+    everything,
+    faults_sheet,
+    notes_sheet,
     orders_sheet,
     readings_sheet,
     records_sheet,
@@ -39,6 +43,55 @@ def deliver(sheet: Sheet, target: Path | None) -> None:
 @click.group()
 def export() -> None:
     """Write the records out as sheets a spreadsheet can open."""
+
+
+@export.command("everything")
+@click.argument("site")
+@click.option("--on", type=DAY, required=True, help="the day the open records are read as of")
+@click.option(
+    "--into",
+    "room",
+    type=click.Path(file_okay=False, path_type=Path),
+    required=True,
+    help="a directory to write the sheets into",
+)
+@pass_ledger
+def export_everything(ledger: Ledger, site: str, on: dt.date, room: Path) -> None:
+    """Write every sheet a site has into a directory."""
+    room.mkdir(parents=True, exist_ok=True)
+    made = everything(ledger.office, site, on)
+    for sheet in made:
+        target = room / f"{sheet.name}.csv"
+        target.write_text(sheet.text())
+        line(f"{len(sheet.rows):>6} rows  {target.name}")
+    line(f"{len(made)} sheets into {room}")
+
+
+@export.command("devices")
+@click.argument("site")
+@TO
+@pass_ledger
+def export_devices(ledger: Ledger, site: str, target: Path | None) -> None:
+    """Write every device at one site."""
+    deliver(devices_sheet(ledger.office, site), target)
+
+
+@export.command("faults")
+@click.argument("site")
+@TO
+@pass_ledger
+def export_faults(ledger: Ledger, site: str, target: Path | None) -> None:
+    """Write every fault ever found on one site's cover."""
+    deliver(faults_sheet(ledger.office, site), target)
+
+
+@export.command("notes")
+@click.argument("site")
+@TO
+@pass_ledger
+def export_notes(ledger: Ledger, site: str, target: Path | None) -> None:
+    """Write every note anybody has written at one site."""
+    deliver(notes_sheet(ledger.office, site, ledger.use_zone(site)), target)
 
 
 @export.command("readings")
