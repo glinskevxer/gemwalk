@@ -50,6 +50,7 @@ jobs:
       - run: python -m gemwalk.tools.check_style
       - run: python -m gemwalk.tools.check_package
       - run: python -m gemwalk.tools.check_readme
+      - run: python -m gemwalk.tools.check_handbook
       - run: python -m gemwalk.tools.schema_dump --check
       - run: python -m gemwalk.tools.build_rules --check
       - run: python -m gemwalk.tools.build_glossary --check

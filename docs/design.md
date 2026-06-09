@@ -125,6 +125,7 @@ they are for.
 - **`gemwalk.tools.check_design`** — The model is frozen, and nothing in the package carries a mutable default.
 - **`gemwalk.tools.check_docstrings`** — Every module, class and public function says what it is for.
 - **`gemwalk.tools.check_errors`** — Every refusal this package makes is one of its own.
+- **`gemwalk.tools.check_handbook`** — The handbook names commands that exist, in an order the tree agrees with.
 - **`gemwalk.tools.check_indexes`** — Every foreign key has an index behind it on the child side.
 - **`gemwalk.tools.check_layers`** — Imports only ever run downhill.
 - **`gemwalk.tools.check_migrations`** — A migration that has shipped is never edited again.
