@@ -311,3 +311,18 @@ def test_the_plant_report_prints(cli: Shell) -> None:
 def test_a_moment_that_is_not_a_moment_is_refused_by_the_plant_report(cli: Shell) -> None:
     out = cli.fails("report", "plant", "NORTHRIDGE", "--from", "half nine", "--to", "later")
     assert "2025-04-08 06:30" in out
+
+
+def test_the_morning_page_prints(cli: Shell) -> None:
+    cli.ok("run", "post", walk(cli, "2025-04-08", "VW-002", temp="138.0"))
+    out = cli.ok("report", "board", "NORTHRIDGE", "--on", "2025-04-20")
+    assert "board" in out
+    assert "what is due" in out
+    assert "EX-2025-001" in out
+    assert "before anybody goes out" in out
+
+
+def test_a_quiet_site_has_a_quiet_page(cli: Shell) -> None:
+    out = cli.ok("report", "board", "NORTHRIDGE", "--on", "2025-04-20")
+    assert "nothing is due" in out
+    assert "every open record has an order" in out

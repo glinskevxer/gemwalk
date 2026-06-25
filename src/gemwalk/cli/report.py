@@ -10,6 +10,7 @@ from gemwalk.cli.support import DAY, Ledger, line, moment_at, pass_ledger, show
 from gemwalk.clock import Month, Quarter, read_day
 from gemwalk.nmoc import Inputs, needed, rate
 from gemwalk.report.annual import annual_report
+from gemwalk.report.board import board_report
 from gemwalk.report.compliance import compliance_report
 from gemwalk.report.device import device_report
 from gemwalk.report.monthly import monthly_report
@@ -179,6 +180,15 @@ def report_removal(
         under = "under" if sample.under(subpart) else "over"
         line(f"  {sample.on}  {sample.estimate.megagrams:,.1f} Mg a year, {under}")
     line(str(read))
+
+
+@report.command("board")
+@click.argument("site")
+@click.option("--on", type=DAY, required=True, help="the day to measure against")
+@pass_ledger
+def report_board(ledger: Ledger, site: str, on: dt.date) -> None:
+    """Print the morning page: everything with a date on it, on one sheet."""
+    show(board_report(ledger.office, site, on))
 
 
 @report.command("due")

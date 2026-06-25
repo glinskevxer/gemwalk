@@ -91,6 +91,7 @@ they are for.
 
 - **`gemwalk.report`** — The paperwork. Everything that leaves this desk on paper is built here.
 - **`gemwalk.report.annual`** — The annual report, which is the one that goes to the regulator.
+- **`gemwalk.report.board`** — The morning page: everything with a date on it, on one sheet of paper.
 - **`gemwalk.report.compliance`** — The quarterly compliance report, which is the one that leaves the site.
 - **`gemwalk.report.device`** — The well card: everything the desk knows about one extraction device.
 - **`gemwalk.report.frame`** — How a report is put together, and how it is printed.
