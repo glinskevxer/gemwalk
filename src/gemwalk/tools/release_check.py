@@ -31,6 +31,14 @@ def missing_files() -> list[str]:
     return [f"{name} is missing" for name in (*REQUIRED, *DOCUMENTS) if not (root / name).exists()]
 
 
+def version_faults() -> list[str]:
+    """Whether the version is three numbers, which is what a tag has to be."""
+    parts = __version__.split(".")
+    if len(parts) != 3 or not all(part.isdigit() for part in parts):
+        return [f"{__version__!r} is not three numbers separated by dots"]
+    return []
+
+
 def changelog_faults() -> list[str]:
     """Whether the changelog has an entry for the version being released."""
     path = repo_root() / "CHANGELOG.md"
@@ -73,7 +81,13 @@ def description_faults() -> list[str]:
 
 def main() -> int:
     """Check everything that has to be true before a version is tagged."""
-    faults = missing_files() + changelog_faults() + script_faults() + description_faults()
+    faults = (
+        missing_files()
+        + version_faults()
+        + changelog_faults()
+        + script_faults()
+        + description_faults()
+    )
     return report("release_check", faults)
 
 

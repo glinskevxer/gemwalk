@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.2.0
+
+- Instruments and calibrations. A run will not open, and a walkover will not
+  start, on a meter the book knows about that was not calibrated that day.
+- Raises, deepenings and redrills, which take a well off the run when they
+  start and put it back remeasured when they finish.
+- The walkover pattern, laid out as legs, so a walk that crossed nine of eleven
+  is a walk that missed two rather than a walk with no findings.
+- Cover faults: cracks, erosion, ponding, exposed refuse, on their own two
+  windows.
+- Visible emissions watches against the five minutes in two hours rule.
+- Field sheets in and out as comma separated text, with every row that would
+  not go named by its line.
+- Notes against anything in the book, and a search that finds them again.
+- The story of one well, gathered out of eight tables into one order.
+- The morning page: every clock on one sheet, ordered by how little time is
+  left.
+- The annual report, the plant report and the well card.
+- The emission rate at all three tiers, and the three criteria for turning the
+  collection system off.
+- Coverage of an area against what it was designed to have, and the valve moves
+  a run's readings ask for.
+- A review of a book for what is true of it and should not be, and maintenance
+  for the file itself.
+
 ## 0.1.0
 
 First release.

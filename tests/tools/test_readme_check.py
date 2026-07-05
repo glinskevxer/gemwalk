@@ -59,7 +59,7 @@ def test_rendering_writes_the_real_output_back() -> None:
     steps = check_readme.parse(BLOCK)
     played = check_readme.replay(steps)
     rewritten = check_readme.render(BLOCK, played)
-    assert "one" not in rewritten
+    assert "\none\ntwo\n" not in rewritten
     assert "landfill gas" in rewritten
 
 

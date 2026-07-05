@@ -147,11 +147,22 @@ def store_seed(ledger: Ledger, force: bool) -> None:
 
 
 @main.command()
-def about() -> None:
-    """Say what this is and what it is for."""
+@click.pass_context
+def about(ctx: click.Context) -> None:
+    """Say what this is, what it is for, and what it can be asked."""
     line(f"gemwalk {__version__}")
     line("landfill gas collection and control system field desk")
     line("wellfield monitoring, exceedance clocks, surface walkovers, the blower station")
+    line("")
+    line("everything lives in one sqlite file, named with --book or GEMWALK_BOOK")
+    line("")
+    top = ctx.find_root().command
+    if not isinstance(top, click.Group):  # pragma: no cover
+        return
+    width = max(len(name) for name in top.commands)
+    for name, command in sorted(top.commands.items()):
+        first = (command.help or "").strip().splitlines()[0] if command.help else ""
+        line(f"  {name:<{width}}  {first}")
 
 
 main.add_command(site)

@@ -127,3 +127,60 @@ def test_a_readme_that_does_not_name_the_package_is_found(
     (tmp_path / "README.md").write_text("# something else\n")
     faults = release_check.description_faults()
     assert any("does not name the package" in fault for fault in faults)
+
+
+def test_the_version_is_three_numbers() -> None:
+    assert release_check.version_faults() == []
+    assert __version__.count(".") == 2
+
+
+def test_a_version_that_is_not_three_numbers_is_found(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(release_check, "__version__", "0.2")
+    assert any("three numbers" in fault for fault in release_check.version_faults())
+
+
+def test_the_changelog_has_an_entry_for_every_version_so_far() -> None:
+    text = (repo_root() / "CHANGELOG.md").read_text()
+    assert "## 0.1.0" in text
+    assert f"## {__version__}" in text
+
+
+def test_the_package_description_says_what_it_is() -> None:
+    description = check_package.pyproject().get("description")
+    assert isinstance(description, str)
+    assert "landfill" in description.lower()
+
+
+def test_the_wheel_ships_the_package_and_nothing_else() -> None:
+    import tomllib
+
+    with (repo_root() / "pyproject.toml").open("rb") as handle:
+        loaded = tomllib.load(handle)
+    wheel = loaded["tool"]["hatch"]["build"]["targets"]["wheel"]
+    assert wheel["packages"] == ["src/gemwalk"]
+
+
+def test_the_source_distribution_ships_what_a_release_needs() -> None:
+    import tomllib
+
+    with (repo_root() / "pyproject.toml").open("rb") as handle:
+        loaded = tomllib.load(handle)
+    included = set(loaded["tool"]["hatch"]["build"]["targets"]["sdist"]["include"])
+    for wanted in ("src", "tests", "docs", "README.md", "CHANGELOG.md", "check.sh"):
+        assert wanted in included
+
+
+def test_the_package_asks_for_a_python_it_is_written_for() -> None:
+    wanted = check_package.pyproject().get("requires-python")
+    assert wanted == ">=3.12"
+
+
+def test_click_is_the_only_thing_it_needs_to_run() -> None:
+    direct = check_package.pyproject().get("dependencies")
+    assert direct == ["click==8.1.8"]
+
+
+def test_the_console_script_is_the_one_the_readme_says() -> None:
+    scripts = check_package.pyproject().get("scripts")
+    assert scripts == {"gemwalk": "gemwalk.cli.main:run"}
+    assert "gemwalk " in (repo_root() / "README.md").read_text()

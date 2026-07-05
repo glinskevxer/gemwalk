@@ -291,3 +291,24 @@ def test_review_can_be_narrowed_to_the_serious_ones(runner: CliRunner, tmp_path:
     result = invoke(runner, book, "store", "review", "NORTHRIDGE", "--serious")
     assert result.exit_code == 0
     assert "1 things to look at" in result.output
+
+
+def test_about_lists_every_group_with_a_line_about_it(runner: CliRunner, tmp_path: Path) -> None:
+    result = invoke(runner, tmp_path / "one.sqlite3", "about")
+    assert result.exit_code == 0
+    for group in ("site", "well", "run", "cover", "plant", "report", "note", "meter"):
+        assert f"  {group}" in result.output
+    assert "GEMWALK_BOOK" in result.output
+
+
+def test_about_does_not_make_a_book(runner: CliRunner, tmp_path: Path) -> None:
+    book = tmp_path / "never.sqlite3"
+    invoke(runner, book, "about")
+    assert not book.exists()
+
+
+def test_the_version_the_flag_prints_is_the_package_version(runner: CliRunner) -> None:
+    from gemwalk import __version__
+
+    result = runner.invoke(main, ["--version"])
+    assert __version__ in result.output
