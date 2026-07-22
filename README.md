@@ -5,7 +5,8 @@ waste landfill. It carries the extraction devices sunk into the refuse, the
 pipe tree that pulls on them, the monthly monitoring pass that reads each
 wellhead, the compliance clocks that a bad reading starts, the quarterly
 walkover of the cover, the blower and flare station that burns what the field
-gives it, and the liquid that gets in the way of all of it.
+gives it, the instruments all of it is measured with, and the liquid that gets
+in the way of the lot.
 
 Everything lives in one sqlite file. There is no server, no daemon and nothing
 to configure.
@@ -20,7 +21,7 @@ alternative to the pressure standard can be approved. This package holds all
 three, holds the site's own elections against them, and reads every wellhead
 against whichever combination applies on the day of the reading.
 
-The clocks are the part worth being careful with, and there are two of them
+The clocks are the part worth being careful with, and there are four of them
 with different shapes.
 
 A wellhead finding starts three windows and **all three are counted from the
@@ -36,7 +37,35 @@ crew that patches a spot on day one has to be back on it by day eleven, and a
 crew that patches the same spot on day ten has until day twenty. Only the last
 window, the one that means drilling, goes back to the day it was found.
 
+A cover fault gets one of two windows depending on what it is and how big, and
+a well being raised gets sixty days off the run, after which somebody has to
+explain it.
+
+`gemwalk report board SITE --on DAY` puts all four on one page in the order the
+dates fall, which is the only order anybody works in.
+
+## What else it holds
+
+- **Instruments.** A run will not open, and a walkover will not start, on a
+  meter the book knows about that was not calibrated that day. Drift is
+  recorded separately from error, because the drift is what says whether the
+  readings taken since the last check are any good.
+- **The walkover pattern**, written down as legs. A walk that crossed nine of
+  eleven is a walk that missed two, not a walk with no findings.
+- **Gas quality read for the well rather than the rule.** Air is 20.9 percent
+  oxygen, so the nitrogen it brings is 3.78 times the oxygen. A wellhead with
+  that ratio is pulling air. A wellhead with a lot of nitrogen and no oxygen is
+  being over pulled and heading for a fire. Those are different jobs.
+- **The valve moves a run's readings ask for**, worst first, with the flooded
+  wells taken out of the list because turning them will not help.
+- **The emission rate at all three tiers**, and the three criteria for turning
+  the whole collection system off.
+- **Notes against anything**, because the field is full of things nobody
+  designed a shape for.
+- **The story of one well**, gathered out of eight tables into one order.
+
 ## Installing
+
 
 ```
 python -m pip install .
@@ -137,11 +166,20 @@ python -m pip install -e ".[dev]" -c constraints.txt
 `check.sh` runs everything ci runs, in the order ci runs it, and each step is
 gated on its own exit status so the output says which one failed.
 
-The package checks itself. `gemwalk.tools` holds seventeen of these: imports
-only run downhill, sql only lives in the store, every foreign key has an index
-behind it, every migration script is hashed so a shipped one cannot be edited,
-every public desk method has a caller, every name says something, every refusal
-is one of the package's own, and this readme is replayed rather than trusted.
+The package checks itself. `gemwalk.tools` holds twenty three of these: imports only
+run downhill, sql only lives in the store, every foreign key has an index behind
+it, every migration script is hashed so a shipped one cannot be edited, every
+public desk method has a caller, every name says something, every refusal is one
+of the package's own, nothing outside the tools asserts a real precondition,
+every command the ci walk runs is a command the tree answers to, the handbook
+names commands that exist, and this readme is replayed rather than trusted.
 
-`docs/schema.sql`, `docs/rules.md` and `docs/glossary.md` are generated. Do not
-edit them: change the code and run the tool.
+`docs/schema.sql`, `docs/rules.md`, `docs/glossary.md` and `docs/design.md` are
+generated. Do not edit them: change the code and run the tool.
+`docs/operating.md` is written by hand, because the order the work happens in is
+not something the code knows.
+
+`gemwalk store seed` fills a book with a year of a plausible site, built to have
+the awkward cases in it: a wellhead that runs hot for three months and comes
+back, one leaking air, one standing full of water, a surface spot that takes two
+goes at the cover, and a flare block that averages under its floor.
