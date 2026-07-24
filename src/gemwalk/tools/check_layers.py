@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import sys
 
-from gemwalk.tools.walker import modules, report
+from gemwalk.tools.walker import Module, modules, report
 
 LAYERS: dict[str, int] = {
     "errors": 0,
@@ -49,22 +49,24 @@ def layer_of(name: str) -> int | None:
     return LAYERS.get(parts[1])
 
 
+def faults_in(module: Module) -> list[str]:
+    """Every import in one module that runs uphill, or no layer at all."""
+    found: list[str] = []
+    mine = layer_of(module.name)
+    if mine is None:
+        return [f"{module.relative}: no layer is written down for this module"]
+    for imported in module.imports():
+        theirs = layer_of(imported)
+        if theirs is not None and theirs > mine:
+            found.append(f"{module.relative}: layer {mine} imports {imported} at layer {theirs}")
+    return found
+
+
 def main() -> int:
     """Check every import in the package runs downhill."""
     faults: list[str] = []
     for module in modules():
-        mine = layer_of(module.name)
-        if mine is None:
-            faults.append(f"{module.relative}: no layer is written down for this module")
-            continue
-        for imported in module.imports():
-            theirs = layer_of(imported)
-            if theirs is None:
-                continue
-            if theirs > mine:
-                faults.append(
-                    f"{module.relative}: layer {mine} imports {imported} at layer {theirs}"
-                )
+        faults.extend(faults_in(module))
     return report("check_layers", faults)
 
 
