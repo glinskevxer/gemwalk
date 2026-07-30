@@ -122,7 +122,12 @@ class Job:
             raise StateError(self.label, "open", "finished")
         if not self.kind.changes_construction:
             return device
-        if self.after_depth is None or self.after_top is None or self.after_bottom is None:
+        if (  # pragma: no cover
+            self.after_depth is None or self.after_top is None or self.after_bottom is None
+        ):
+            # A finished job of a kind that changes the construction cannot be
+            # built without its measurements, so this cannot happen. It is here
+            # so the narrowing is honest rather than asserted away.
             raise RuleError("rework", "the device was not measured afterwards")
         return replace(
             device,

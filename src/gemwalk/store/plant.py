@@ -41,7 +41,10 @@ def stamp(moment: dt.datetime) -> str:
 
 def unstamp(text: str) -> dt.datetime:
     """Read a moment back out of the book."""
-    read = read_moment_or_none(text)
+    try:
+        read = read_moment_or_none(text)
+    except ValueError:
+        raise DesignError("moment", f"{text!r} is not a moment") from None
     if read is None:
         raise DesignError("moment", f"{text!r} is not a moment")
     return read
