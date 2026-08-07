@@ -187,3 +187,32 @@ def test_the_tree_carries_every_device_under_a_header(
     assert [b.lateral.label for b in tree[0].branches] == [first, second]
     assert [d.label for d in desk.branch(first).live_devices] == [one]
     assert desk.branch(second).live_devices == ()
+
+
+def test_a_lateral_bigger_than_its_header_is_refused_by_the_desk(
+    desks: tuple[PipingDesk, WellfieldDesk],
+) -> None:
+    desk, _ = desks
+    header = a_header(desk, diameter=8.0)
+    with pytest.raises(RuleError, match="does not tie into"):
+        desk.lay_lateral(
+            "NORTHRIDGE",
+            header,
+            diameter=18.0,
+            material="HDPE SDR17",
+            length_feet=100.0,
+            on=LAID,
+        )
+
+
+def test_a_device_of_another_site_cannot_be_tied_in(
+    desks: tuple[PipingDesk, WellfieldDesk],
+) -> None:
+    desk, wells = desks
+    lateral = a_lateral(desk, a_header(desk))
+    device = a_device(wells)
+    desk.devices.book.execute("PRAGMA foreign_keys = OFF")
+    desk.devices.book.execute("UPDATE device SET site = 'SOUTHFORK' WHERE label = ?", (device,))
+    desk.devices.book.execute("PRAGMA foreign_keys = ON")
+    with pytest.raises(RuleError, match="is not pipe at"):
+        desk.tie_in(device, lateral)

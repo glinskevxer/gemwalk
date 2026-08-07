@@ -232,3 +232,23 @@ def test_an_order_off_a_record_may_already_be_past_its_date(desk: WorkDesk) -> N
     order = desk.raise_for_exceedance(record, Job.VALVE, dt.date(2025, 9, 2))
     assert order.born_late
     assert order.due_on == dt.date(2025, 8, 6)
+
+
+def test_orders_come_back_by_the_state_they_are_in(desk: WorkDesk) -> None:
+    from gemwalk.model.work import Standing
+
+    order = desk.raise_order(
+        "NORTHRIDGE", Job.VALVE, "VW-001", on=APRIL, due=dt.date(2025, 4, 13)
+    ).label
+    assert [o.label for o in desk.orders.in_state("NORTHRIDGE", Standing.OPEN)] == [order]
+    desk.assign(order, "north crew", APRIL)
+    assert desk.orders.in_state("NORTHRIDGE", Standing.OPEN) == []
+    assert len(desk.orders.in_state("NORTHRIDGE", Standing.ASSIGNED)) == 1
+
+
+def test_the_orders_raised_off_one_record_come_back_together(desk: WorkDesk) -> None:
+    record = an_exceedance(desk)
+    desk.raise_for_exceedance(record, Job.VALVE, dt.date(2025, 4, 9))
+    desk.raise_for_exceedance(record, Job.WELLHEAD, dt.date(2025, 4, 10))
+    assert len(desk.orders.of_record(record)) == 2
+    assert desk.orders.of_record("EX-1999-001") == []

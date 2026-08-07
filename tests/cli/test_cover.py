@@ -345,3 +345,58 @@ def test_the_history_of_a_place_lists_its_faults(cli: Shell) -> None:
     out = cli.ok("cover", "history", "NORTHRIDGE", "grid 14-J")
     assert "CF-2025-001" in out
     assert "settlement at grid 14-J" in out
+
+
+def test_a_site_with_no_areas_has_nothing_to_walk(cli: Shell, tmp_path: Path) -> None:
+    cli.ok(
+        "site",
+        "open",
+        "BARE",
+        "Bare Field",
+        "--subpart",
+        "XXX",
+        "--permit",
+        "p",
+        "--zone",
+        "America/Chicago",
+        "--capacity",
+        "1000000",
+        "--opened",
+        "2000-01-01",
+    )
+    out = cli.ok(
+        "cover",
+        "walk",
+        "BARE",
+        "--on",
+        "2025-05-13",
+        "--monitor",
+        "T. W.",
+        "--instrument",
+        "TVA-1",
+        "--background",
+        "2",
+        "--wind",
+        "3.4",
+        "--gust",
+        "7.1",
+    )
+    walk = out.split()[0]
+    assert "no areas to walk" in cli.ok("cover", "route", walk)
+
+
+def test_a_site_with_no_open_spots_says_so(cli: Shell) -> None:
+    assert "no open spots" in cli.ok("cover", "board", "NORTHRIDGE", "--on", "2025-05-20")
+
+
+def test_a_range_of_quarters_all_walked_says_so(cli: Shell) -> None:
+    walk = a_walk(cli)
+    cli.ok("cover", "finish", walk, "--on", "2025-05-15")
+    out = cli.ok("cover", "gaps", "NORTHRIDGE", "--first", "2025Q2", "--last", "2025Q2")
+    assert "every quarter in the range was walked" in out
+
+
+def test_a_cover_nothing_was_marked_twice_on_says_so(cli: Shell) -> None:
+    assert "no place has been marked twice" in cli.ok(
+        "cover", "repeats", "NORTHRIDGE", "--since", "2025-01-01"
+    )

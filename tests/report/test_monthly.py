@@ -146,3 +146,20 @@ def test_the_whole_report_renders(office: Office) -> None:
     assert "the wellheads" in text
     assert "the findings" in text
     assert "liquids" in text
+
+
+def test_the_pressure_alternative_is_written_at_the_top(office: Office) -> None:
+    office.sites.elect(SITE, dt.date(2025, 3, 1), higher_pressure=True)
+    section = monthly_report(office, SITE, MONTH).find("the site")
+    assert section is not None
+    assert any("pressure standard" in line for line in section.body)
+
+
+def test_a_wellhead_that_was_not_read_is_left_off_the_table(office: Office) -> None:
+    run = walk_wellfield(office, APRIL)
+    office.monitoring.readings.book.execute(
+        "DELETE FROM reading WHERE run = ? AND device = 'VW-001'", (run,)
+    )
+    section = monthly_report(office, SITE, MONTH).find("the wellheads")
+    assert section is not None
+    assert "3 wellheads read clear" in section.body
