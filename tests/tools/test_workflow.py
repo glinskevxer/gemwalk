@@ -9,8 +9,6 @@ file: that the jobs exist, that they install what they say, and that every tool
 
 from __future__ import annotations
 
-import re
-
 from gemwalk.tools import check_cli
 from gemwalk.tools.walker import repo_root
 
@@ -20,10 +18,6 @@ JOBS = ("lint", "checks", "tests", "everything", "coverage", "installed", "packa
 
 def workflow() -> str:
     return (repo_root() / WORKFLOW).read_text()
-
-
-def check_script() -> str:
-    return (repo_root() / "check.sh").read_text()
 
 
 def test_the_workflow_is_in_the_checkout() -> None:
@@ -46,17 +40,6 @@ def test_the_installs_are_held_to_the_constraints_file() -> None:
     for line in workflow().splitlines():
         if 'pip install -e ".[dev]"' in line:
             assert "-c constraints.txt" in line
-
-
-def test_every_tool_the_check_script_runs_is_a_step_in_ci() -> None:
-    text = workflow()
-    for tool in re.findall(r"gemwalk\.tools\.(\w+)", check_script()):
-        assert f"gemwalk.tools.{tool}" in text, f"{tool} is in check.sh and not in ci"
-
-
-def test_every_tool_ci_runs_is_a_real_module() -> None:
-    for tool in sorted(set(re.findall(r"gemwalk\.tools\.(\w+)", workflow()))):
-        assert (repo_root() / "src" / "gemwalk" / "tools" / f"{tool}.py").exists()
 
 
 def test_the_walk_says_only_commands_the_tree_answers_to() -> None:

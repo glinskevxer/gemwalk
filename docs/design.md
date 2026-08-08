@@ -122,6 +122,7 @@ they are for.
 - **`gemwalk.tools.build_design`** — Write the map of the package out of the package.
 - **`gemwalk.tools.build_glossary`** — Write the glossary out of the enumerations the package is made of.
 - **`gemwalk.tools.build_rules`** — Write the regulation out of the table it is held in.
+- **`gemwalk.tools.check_ci`** — The check script and the workflow agree, and both of them run every tool.
 - **`gemwalk.tools.check_cli`** — The command line describes itself, all the way down.
 - **`gemwalk.tools.check_design`** — The model is frozen, and nothing in the package carries a mutable default.
 - **`gemwalk.tools.check_docstrings`** — Every module, class and public function says what it is for.

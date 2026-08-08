@@ -28,6 +28,7 @@ echo "checks"
 for check in check_docstrings check_layers check_wiring check_tests check_cli \
              check_sql check_indexes check_migrations check_naming check_errors \
              check_design check_style check_package check_readme check_handbook \
+             check_ci \
              release_check; do
   run "$check" "$python" -m "gemwalk.tools.$check"
 done

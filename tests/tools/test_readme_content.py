@@ -70,8 +70,8 @@ def test_it_says_how_many_tools_there_are() -> None:
     tools = [
         module for module in modules("tools") if not module.name.endswith(("__init__", "walker"))
     ]
-    assert "twenty three of these" in readme()
-    assert len(tools) == 23
+    assert "twenty four of these" in readme()
+    assert len(tools) == 24
 
 
 def test_it_names_the_command_that_fills_a_book() -> None:

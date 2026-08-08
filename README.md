@@ -166,7 +166,7 @@ python -m pip install -e ".[dev]" -c constraints.txt
 `check.sh` runs everything ci runs, in the order ci runs it, and each step is
 gated on its own exit status so the output says which one failed.
 
-The package checks itself. `gemwalk.tools` holds twenty three of these: imports only
+The package checks itself. `gemwalk.tools` holds twenty four of these: imports only
 run downhill, sql only lives in the store, every foreign key has an index behind
 it, every migration script is hashed so a shipped one cannot be edited, every
 public desk method has a caller, every name says something, every refusal is one
