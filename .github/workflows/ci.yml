@@ -186,6 +186,16 @@ jobs:
           gemwalk --book "$book" pipe tree NORTHRIDGE
           gemwalk --book "$book" pipe show HD-01
           gemwalk --book "$book" pipe branch LT-001
+          gemwalk --book "$book" meter add GEM5000-40912 NORTHRIDGE --kind analyser \
+            --maker "Verrick Instruments" --model GEM5000 --serial 40912 --on 2022-03-01
+          gemwalk --book "$book" meter add TVA1000B-8841 NORTHRIDGE --kind detector \
+            --maker "Verrick Instruments" --model TVA1000B --serial 8841 --on 2022-03-01
+          gemwalk --book "$book" meter due NORTHRIDGE --on 2025-04-08
+          gemwalk --book "$book" meter calibrate GEM5000-40912 "2025-04-08 05:40" \
+            --standard "50% CH4" --expected 50 --before 49.6 --after 50.1 --by "D. Kasprzak"
+          gemwalk --book "$book" meter standing GEM5000-40912 --on 2025-04-08
+          gemwalk --book "$book" meter history GEM5000-40912
+          gemwalk --book "$book" meter day GEM5000-40912 --on 2025-04-08
           gemwalk --book "$book" run open NORTHRIDGE --on 2025-04-08 \
             --monitor "D. Kasprzak" --meter GEM5000-40912
           gemwalk --book "$book" run read MR-2025-04-01 VW-001 --on 2025-04-08 \
@@ -202,6 +212,12 @@ jobs:
           gemwalk --book "$book" run post MR-2025-04-01
           gemwalk --book "$book" run list NORTHRIDGE
           gemwalk --book "$book" run gaps NORTHRIDGE --first 2025-01 --last 2025-04
+          gemwalk --book "$book" run quality MR-2025-04-01
+          gemwalk --book "$book" run shape MR-2025-04-01
+          gemwalk --book "$book" run tune MR-2025-04-01 --all
+          gemwalk --book "$book" run drift VW-001
+          gemwalk --book "$book" run sheet
+          gemwalk --book "$book" run dump MR-2025-04-01
           gemwalk --book "$book" record board NORTHRIDGE --on 2025-04-10
           gemwalk --book "$book" record kinds NORTHRIDGE
           gemwalk --book "$book" work from EX-2025-001 --job wellhead --on 2025-04-10
@@ -216,9 +232,22 @@ jobs:
           gemwalk --book "$book" record show EX-2025-001
           gemwalk --book "$book" record late NORTHRIDGE --on 2025-04-20
           gemwalk --book "$book" record catch-up NORTHRIDGE --on 2025-04-20
+          gemwalk --book "$book" well radius A-03 150
+          gemwalk --book "$book" well coverage NORTHRIDGE --on 2025-04-30
+          gemwalk --book "$book" well start VW-004 --kind raise --on 2025-04-25
+          gemwalk --book "$book" well work NORTHRIDGE --on 2025-04-28
+          gemwalk --book "$book" well finish RW-2025-001 --on 2025-04-29 \
+            --depth 122 --screen-top 52 --screen-bottom 116
+          gemwalk --book "$book" well rework VW-004
+          gemwalk --book "$book" cover pattern A-03 --legs 2 --metres 400
+          gemwalk --book "$book" meter calibrate TVA1000B-8841 "2025-05-13 06:10" \
+            --standard "500 ppm methane" --expected 500 --before 496 --after 500 \
+            --by "T. Wierzbicki"
           gemwalk --book "$book" cover walk NORTHRIDGE --on 2025-05-13 \
             --monitor "T. Wierzbicki" --instrument TVA1000B-8841 \
             --background 2 --wind 3.4 --gust 7.1
+          gemwalk --book "$book" cover cross SW-2025Q2-01 A-03-L01 A-03-L02
+          gemwalk --book "$book" cover route SW-2025Q2-01
           gemwalk --book "$book" cover mark SW-2025Q2-01 A-03 "grid 14-J" 720 --on 2025-05-13
           gemwalk --book "$book" cover finish SW-2025Q2-01 --on 2025-05-15
           gemwalk --book "$book" cover repair SH-2025Q2-001 --on 2025-05-22
@@ -229,6 +258,11 @@ jobs:
           gemwalk --book "$book" cover invalid NORTHRIDGE
           gemwalk --book "$book" cover gaps NORTHRIDGE --first 2025Q1 --last 2025Q2
           gemwalk --book "$book" cover repeats NORTHRIDGE --since 2025-01-01
+          gemwalk --book "$book" cover fault A-03 "grid 21-C" --kind crack \
+            --extent 2 --on 2025-05-20 --by "T. Wierzbicki"
+          gemwalk --book "$book" cover faults NORTHRIDGE --on 2025-05-25
+          gemwalk --book "$book" cover history NORTHRIDGE "grid 21-C"
+          gemwalk --book "$book" cover fixed CF-2025-001 --on 2025-05-26
           gemwalk --book "$book" plant install CD-01 NORTHRIDGE "west flare" \
             --kind enclosed_flare --capacity 2400 --floor 1400 --on 2016-04-01
           gemwalk --book "$book" plant log CD-01 "2025-06-11 09:00" \
@@ -242,6 +276,12 @@ jobs:
           gemwalk --book "$book" plant down CD-01 "2025-06-12 06:00" "blower bearing"
           gemwalk --book "$book" plant up OT-2025-001 "2025-06-12 15:00"
           gemwalk --book "$book" plant board NORTHRIDGE "2025-06-13 09:00"
+          gemwalk --book "$book" plant install CD-02 NORTHRIDGE "east stick" \
+            --kind candlestick --capacity 900 --on 2019-05-01
+          gemwalk --book "$book" plant watch CD-02 "2025-06-11 09:00" \
+            --minutes 120 --smoke 2 --by "R. Bellingham"
+          gemwalk --book "$book" plant watches CD-02
+          gemwalk --book "$book" plant smoke NORTHRIDGE
           gemwalk --book "$book" plant summary CD-01 \
             --from "2025-06-11 00:00" --to "2025-06-13 00:00"
           gemwalk --book "$book" water tape VW-003 20 --on 2025-06-09
@@ -257,6 +297,23 @@ jobs:
           gemwalk --book "$book" report due NORTHRIDGE --on 2025-06-13
           gemwalk --book "$book" report rate NORTHRIDGE --acceptance 180000 --age 27
           gemwalk --book "$book" report rate NORTHRIDGE --acceptance 180000 --age 27 --nmoc 120
+          gemwalk --book "$book" report board NORTHRIDGE --on 2025-06-13
+          gemwalk --book "$book" report plant NORTHRIDGE \
+            --from "2025-06-11 00:00" --to "2025-06-13 00:00"
+          gemwalk --book "$book" report story VW-001
+          gemwalk --book "$book" note write VW-001 "2025-04-08 16:20" "valve seized" \
+            --by "D. Kasprzak"
+          gemwalk --book "$book" note about VW-001
+          gemwalk --book "$book" note find NORTHRIDGE valve
+          gemwalk --book "$book" note recent NORTHRIDGE
+          gemwalk --book "$book" note kinds NORTHRIDGE
+          gemwalk --book "$book" export devices NORTHRIDGE
+          gemwalk --book "$book" export readings MR-2025-04-01
+          gemwalk --book "$book" export everything NORTHRIDGE --on 2025-06-13 --into /tmp/sheets
+          gemwalk --book "$book" store review NORTHRIDGE
+          gemwalk --book "$book" store verify
+          gemwalk --book "$book" store rows
+          gemwalk --book "$book" store backup /tmp/walk-copy.sqlite3
           gemwalk --book "$book" store counts
           gemwalk --book "$book" store check
           gemwalk --book "$book" about

@@ -9,6 +9,7 @@ file: that the jobs exist, that they install what they say, and that every tool
 
 from __future__ import annotations
 
+from gemwalk.cli.main import main as tree
 from gemwalk.tools import check_cli
 from gemwalk.tools.walker import repo_root
 
@@ -48,8 +49,24 @@ def test_the_walk_says_only_commands_the_tree_answers_to() -> None:
 
 def test_the_walk_actually_says_something() -> None:
     spoken = check_cli.spoken_in_the_walk()
-    assert len(spoken) > 40
+    assert len(spoken) > 100
     assert "store init" in spoken
+
+
+def test_the_walk_reaches_most_of_the_tree() -> None:
+    """The walk is the only place the whole command line is run end to end.
+
+    It does not have to touch every command, because some of them only make
+    sense against a book in a state the walk does not build. It does have to
+    touch most of them, or a command can be broken for a release without
+    anything noticing.
+    """
+    spoken = {" ".join(said.split()[:2]) for said in check_cli.spoken_in_the_walk()}
+    leaves = {
+        path for path, command in check_cli.commands(tree) if not hasattr(command, "commands")
+    }
+    reached = leaves & spoken
+    assert len(reached) / len(leaves) > 0.75
 
 
 def test_the_walk_touches_every_command_group() -> None:
@@ -80,3 +97,47 @@ def test_the_package_job_builds_and_installs_the_wheel() -> None:
     text = workflow()
     assert "python -m build" in text
     assert "pip install dist/*.whl" in text
+
+
+def heads() -> list[str]:
+    """The walk as command paths, with the arguments taken off."""
+    return [" ".join(said.split()[:2]) for said in check_cli.spoken_in_the_walk()]
+
+
+def test_the_walk_calibrates_before_it_reads_anything() -> None:
+    said = heads()
+    assert said.index("meter calibrate") < said.index("run open")
+
+
+def test_the_walk_lays_the_pattern_before_it_walks_the_cover() -> None:
+    said = heads()
+    assert said.index("cover pattern") < said.index("cover walk")
+
+
+def test_the_walk_posts_the_run_before_it_reads_the_board() -> None:
+    said = heads()
+    assert said.index("run post") < said.index("record board")
+
+
+def test_the_walk_ends_by_checking_the_book_it_built() -> None:
+    said = heads()
+    for wanted in ("store review", "store verify", "store check"):
+        assert wanted in said
+
+
+def test_the_walk_prints_every_report() -> None:
+    said = set(heads())
+    for wanted in (
+        "report month",
+        "report quarter",
+        "report board",
+        "report plant",
+        "report story",
+        "report due",
+        "report rate",
+    ):
+        assert wanted in said
+
+
+def test_the_walk_takes_a_backup_of_what_it_built() -> None:
+    assert "store backup" in heads()
