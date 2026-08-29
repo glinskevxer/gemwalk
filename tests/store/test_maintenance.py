@@ -89,3 +89,25 @@ def test_an_empty_book_has_nothing_in_any_table_but_its_own_log(book: Book) -> N
     assert counts["site"] == 0
     assert counts["reading"] == 0
     assert counts["schema_log"] > 0
+
+
+def test_a_backup_leaves_no_connection_open_behind_it(filled: Book, tmp_path: Path) -> None:
+    """The one that only fails on python 3.13, and only somewhere else.
+
+    ``with sqlite3.connect(...)`` is a transaction context manager, not a
+    closing one, so a backup written that way leaves its target connection open
+    until the interpreter collects it. On 3.12 that is silent. On 3.13 it is a
+    ``ResourceWarning`` raised against whichever test the collector was inside,
+    which is never this one.
+    """
+    import gc
+    import sqlite3
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", ResourceWarning)
+        for number in range(3):
+            copy_to(filled, tmp_path / f"copy-{number}.sqlite3")
+        gc.collect()
+    assert (tmp_path / "copy-0.sqlite3").exists()
+    del sqlite3

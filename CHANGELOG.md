@@ -24,6 +24,10 @@
   a run's readings ask for.
 - A review of a book for what is true of it and should not be, and maintenance
   for the file itself.
+- The command line is now walked end to end in ci rather than in part, and two
+  tools hold the walk itself: one looks every command in it up in the click
+  tree, and one makes `check.sh` and the workflow agree with each other and
+  with the tools the package actually has.
 
 ## 0.1.0
 

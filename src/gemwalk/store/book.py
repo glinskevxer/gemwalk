@@ -181,10 +181,20 @@ class Book:
         write ahead logging mode keeps recent work in a second file, so a
         filesystem copy of the main one is a copy of the book as it was at some
         moment nobody chose. Sqlite's own backup takes a consistent one.
+
+        The target is closed by hand. ``with sqlite3.connect(...)`` looks like
+        it closes and does not: it is a transaction context manager, so the
+        connection is left open and collected whenever the interpreter gets
+        round to it. That is silence on python 3.12 and a ``ResourceWarning``
+        on 3.13, raised against whichever test happened to be running at the
+        time, which is how this was found.
         """
         target = Path(path)
-        with sqlite3.connect(target) as other:
+        other = sqlite3.connect(target)
+        try:
             self._live().backup(other)
+        finally:
+            other.close()
         return target
 
     def close(self) -> None:
