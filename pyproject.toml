@@ -70,3 +70,7 @@ exclude_lines = ["pragma: no cover", "if __name__ == .__main__.:"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 filterwarnings = ["error"]
+markers = [
+  "repo: asserts the state of this checkout rather than the behaviour of the package",
+]
+addopts = "-m 'not repo'"

@@ -23,6 +23,7 @@ def a_module(source: str, name: str = "gemwalk.model.probe") -> Module:
     return Module(package_root() / "model" / "probe.py", name, ast.parse(source))
 
 
+@pytest.mark.repo
 def test_the_walker_finds_this_package(capsys: pytest.CaptureFixture[str]) -> None:
     names = {module.name for module in modules()}
     assert "gemwalk.units" in names
@@ -30,6 +31,7 @@ def test_the_walker_finds_this_package(capsys: pytest.CaptureFixture[str]) -> No
     assert "gemwalk.cli.main" in names
 
 
+@pytest.mark.repo
 def test_the_walker_finds_the_test_suite() -> None:
     names = {module.name for module in suite_modules()}
     assert "tests.support" in names
@@ -64,6 +66,7 @@ def test_reporting_something_is_a_failure(capsys: pytest.CaptureFixture[str]) ->
     assert "one" in printed
 
 
+@pytest.mark.repo
 def test_the_package_has_a_docstring_everywhere_it_should(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -107,10 +110,12 @@ def test_a_public_class_with_no_docstring_is_found() -> None:
     assert any("A has no docstring" in fault for fault in faults)
 
 
+@pytest.mark.repo
 def test_every_import_in_the_package_runs_downhill() -> None:
     assert check_layers.main() == 0
 
 
+@pytest.mark.repo
 def test_every_part_of_the_package_has_a_layer() -> None:
     parts = {
         path.name
@@ -127,10 +132,12 @@ def test_a_name_outside_the_package_has_no_layer() -> None:
     assert check_layers.layer_of("gemwalk.store.book") == 2
 
 
+@pytest.mark.repo
 def test_the_layer_file_lists_the_directories_that_exist() -> None:
     for part in check_layers.LAYERS:
         assert (package_root() / part).exists() or (package_root() / f"{part}.py").exists()
 
 
+@pytest.mark.repo
 def test_a_test_module_is_not_in_the_package(tmp_path: Path) -> None:
     assert all(not module.name.startswith("tests") for module in modules())

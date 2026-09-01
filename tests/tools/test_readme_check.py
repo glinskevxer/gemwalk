@@ -19,10 +19,12 @@ two
 """
 
 
+@pytest.mark.repo
 def test_the_readme_transcript_still_prints_what_it_says_it_does() -> None:
     assert check_readme.main([]) == 0
 
 
+@pytest.mark.repo
 def test_the_readme_has_a_transcript_at_all() -> None:
     steps = check_readme.parse((repo_root() / check_readme.TARGET).read_text())
     assert len(steps) > 10

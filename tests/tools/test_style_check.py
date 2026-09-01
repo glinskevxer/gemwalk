@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import ast
 
+import pytest
+
 from gemwalk.tools import check_style
 from gemwalk.tools.walker import Module, package_root
 
@@ -12,6 +14,7 @@ def a_module(source: str, name: str = "gemwalk.service.probe") -> Module:
     return Module(package_root() / "service" / "probe.py", name, ast.parse(source), source)
 
 
+@pytest.mark.repo
 def test_the_package_is_written_the_way_it_says_it_is() -> None:
     assert check_style.main() == 0
 
@@ -92,6 +95,7 @@ def test_the_whole_check_takes_all_four_together() -> None:
     assert len(faults) == 2
 
 
+@pytest.mark.repo
 def test_the_check_is_a_step_in_the_check_script_and_in_ci() -> None:
     from gemwalk.tools.walker import repo_root
 

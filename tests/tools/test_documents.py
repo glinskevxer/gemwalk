@@ -12,14 +12,17 @@ from gemwalk.tools import build_glossary, build_rules
 from gemwalk.tools.walker import repo_root
 
 
+@pytest.mark.repo
 def test_the_rules_document_on_disk_is_current() -> None:
     assert build_rules.main(["--check"]) == 0
 
 
+@pytest.mark.repo
 def test_the_glossary_on_disk_is_current() -> None:
     assert build_glossary.main(["--check"]) == 0
 
 
+@pytest.mark.repo
 def test_both_documents_are_in_the_checkout() -> None:
     assert (repo_root() / build_rules.TARGET).exists()
     assert (repo_root() / build_glossary.TARGET).exists()

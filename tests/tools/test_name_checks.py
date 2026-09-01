@@ -15,6 +15,7 @@ def a_module(source: str, name: str = "gemwalk.service.probe") -> Module:
     return Module(package_root() / "service" / "probe.py", name, ast.parse(source))
 
 
+@pytest.mark.repo
 def test_no_name_in_the_package_says_nothing() -> None:
     assert check_naming.main() == 0
 
@@ -64,6 +65,7 @@ def test_a_word_in_a_docstring_is_not_a_name() -> None:
     assert check_naming.faults_in(a_module(source)) == []
 
 
+@pytest.mark.repo
 def test_every_raise_in_the_package_is_one_of_ours() -> None:
     assert check_errors.main() == 0
 

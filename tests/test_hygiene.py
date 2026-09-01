@@ -92,6 +92,7 @@ def test_seeding_a_book_writes_nothing_into_the_package(
         assert office.counts()["reading"] > 0
 
 
+@pytest.mark.repo
 def test_the_generated_documents_are_the_only_thing_written_to_the_checkout(
     tmp_path: Path,
 ) -> None:
@@ -107,6 +108,7 @@ def test_the_generated_documents_are_the_only_thing_written_to_the_checkout(
     assert written <= have
 
 
+@pytest.mark.repo
 def test_the_package_directory_holds_only_source_and_the_marker() -> None:
     for name in listing(package_root()):
         assert name.endswith(".py") or name == "py.typed", name

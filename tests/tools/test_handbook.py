@@ -10,22 +10,27 @@ from gemwalk.tools import check_handbook, release_check
 from gemwalk.tools.walker import repo_root
 
 
+@pytest.mark.repo
 def test_the_handbook_is_in_the_checkout() -> None:
     assert (repo_root() / check_handbook.TARGET).exists()
 
 
+@pytest.mark.repo
 def test_the_handbook_names_only_real_commands() -> None:
     assert check_handbook.unknown() == []
 
 
+@pytest.mark.repo
 def test_the_handbook_gets_to_every_part_of_the_job() -> None:
     assert check_handbook.unwritten() == []
 
 
+@pytest.mark.repo
 def test_the_whole_check_passes() -> None:
     assert check_handbook.main() == 0
 
 
+@pytest.mark.repo
 def test_the_handbook_names_the_sequence_it_says_it_does() -> None:
     said = check_handbook.named()
     assert said[0] == "store init"
@@ -70,11 +75,13 @@ def test_a_handbook_with_no_commands_in_it_is_found(
     assert "names no commands" in capsys.readouterr().out
 
 
+@pytest.mark.repo
 def test_a_release_wants_the_handbook() -> None:
     assert check_handbook.TARGET in release_check.DOCUMENTS
     assert release_check.missing_files() == []
 
 
+@pytest.mark.repo
 def test_the_check_is_a_step_in_the_check_script_and_in_ci() -> None:
     assert "check_handbook" in (repo_root() / "check.sh").read_text()
     assert "check_handbook" in (repo_root() / ".github/workflows/ci.yml").read_text()

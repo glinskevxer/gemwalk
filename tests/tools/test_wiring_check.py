@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import ast
 
+import pytest
+
 from gemwalk.tools import check_wiring
 from gemwalk.tools.walker import Module, package_root
 
@@ -12,10 +14,12 @@ def a_module(source: str, name: str = "gemwalk.service.probe") -> Module:
     return Module(package_root() / "service" / "probe.py", name, ast.parse(source))
 
 
+@pytest.mark.repo
 def test_every_desk_method_has_a_caller() -> None:
     assert check_wiring.main() == 0
 
 
+@pytest.mark.repo
 def test_the_survey_finds_the_desks() -> None:
     found = check_wiring.survey()
     assert "SiteDesk.open_site" in found.methods

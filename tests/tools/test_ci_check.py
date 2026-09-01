@@ -10,11 +10,13 @@ from gemwalk.tools import check_ci
 from gemwalk.tools.walker import repo_root
 
 
+@pytest.mark.repo
 def test_the_check_script_and_the_workflow_agree() -> None:
     assert check_ci.main() == 0
     assert check_ci.faults() == []
 
 
+@pytest.mark.repo
 def test_the_package_has_the_tools_both_lists_name() -> None:
     have = check_ci.tools()
     assert "check_layers" in have
@@ -23,12 +25,14 @@ def test_the_package_has_the_tools_both_lists_name() -> None:
     assert "smoke" not in have
 
 
+@pytest.mark.repo
 def test_both_files_name_every_tool() -> None:
     have = check_ci.tools()
     assert have <= check_ci.named_in(check_ci.SCRIPT)
     assert have <= check_ci.named_in(check_ci.WORKFLOW)
 
 
+@pytest.mark.repo
 def test_the_check_script_names_its_tools_in_a_loop() -> None:
     text = (repo_root() / check_ci.SCRIPT).read_text()
     found = check_ci._from_loop(text)
@@ -79,6 +83,7 @@ def test_a_workflow_that_runs_no_tools_is_found(
     assert "runs no tools at all" in capsys.readouterr().out
 
 
+@pytest.mark.repo
 def test_the_check_is_in_both_lists_itself() -> None:
     assert "check_ci" in (repo_root() / check_ci.SCRIPT).read_text()
     assert "check_ci" in (repo_root() / check_ci.WORKFLOW).read_text()

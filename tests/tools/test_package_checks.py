@@ -16,10 +16,12 @@ def a_module(source: str, name: str = "gemwalk.service.probe") -> Module:
     return Module(package_root() / "service" / "probe.py", name, ast.parse(source))
 
 
+@pytest.mark.repo
 def test_the_package_agrees_with_itself() -> None:
     assert check_package.main() == 0
 
 
+@pytest.mark.repo
 def test_the_version_is_written_in_two_places_and_they_agree() -> None:
     assert check_package.pyproject()["version"] == __version__
     assert check_package.version_faults() == []
@@ -45,10 +47,12 @@ def test_a_module_lists_what_it_defines_and_imports() -> None:
     assert {"os", "Path", "X", "Y", "go", "A"} <= names
 
 
+@pytest.mark.repo
 def test_every_export_in_the_package_is_real() -> None:
     assert check_package.export_faults() == []
 
 
+@pytest.mark.repo
 def test_every_direct_dependency_is_pinned() -> None:
     assert check_package.dependency_faults() == []
     assert "click" in check_package.pinned()
@@ -67,6 +71,7 @@ def test_a_dependency_with_no_pin_at_all_is_found(monkeypatch: pytest.MonkeyPatc
     assert any("not pinned to one version" in fault for fault in faults)
 
 
+@pytest.mark.repo
 def test_everything_a_release_needs_is_in_the_checkout() -> None:
     assert release_check.main() == 0
     assert release_check.missing_files() == []
@@ -78,6 +83,7 @@ def test_a_missing_file_is_found(monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     assert len(faults) == len(release_check.REQUIRED) + len(release_check.DOCUMENTS)
 
 
+@pytest.mark.repo
 def test_the_changelog_has_an_entry_for_this_version() -> None:
     assert release_check.changelog_faults() == []
     assert f"## {__version__}" in (repo_root() / "CHANGELOG.md").read_text()
@@ -92,6 +98,7 @@ def test_a_changelog_with_no_entry_is_found(
     assert any("no entry" in fault for fault in faults)
 
 
+@pytest.mark.repo
 def test_the_console_script_points_at_something_that_exists() -> None:
     assert release_check.script_faults() == []
 
@@ -116,6 +123,7 @@ def test_a_console_script_pointing_at_no_module_is_found(
     assert any("will not import" in fault for fault in faults)
 
 
+@pytest.mark.repo
 def test_the_package_says_what_it_is_in_both_places() -> None:
     assert release_check.description_faults() == []
 
@@ -129,6 +137,7 @@ def test_a_readme_that_does_not_name_the_package_is_found(
     assert any("does not name the package" in fault for fault in faults)
 
 
+@pytest.mark.repo
 def test_the_version_is_three_numbers() -> None:
     assert release_check.version_faults() == []
     assert __version__.count(".") == 2
@@ -139,18 +148,21 @@ def test_a_version_that_is_not_three_numbers_is_found(monkeypatch: pytest.Monkey
     assert any("three numbers" in fault for fault in release_check.version_faults())
 
 
+@pytest.mark.repo
 def test_the_changelog_has_an_entry_for_every_version_so_far() -> None:
     text = (repo_root() / "CHANGELOG.md").read_text()
     assert "## 0.1.0" in text
     assert f"## {__version__}" in text
 
 
+@pytest.mark.repo
 def test_the_package_description_says_what_it_is() -> None:
     description = check_package.pyproject().get("description")
     assert isinstance(description, str)
     assert "landfill" in description.lower()
 
 
+@pytest.mark.repo
 def test_the_wheel_ships_the_package_and_nothing_else() -> None:
     import tomllib
 
@@ -160,6 +172,7 @@ def test_the_wheel_ships_the_package_and_nothing_else() -> None:
     assert wheel["packages"] == ["src/gemwalk"]
 
 
+@pytest.mark.repo
 def test_the_source_distribution_ships_what_a_release_needs() -> None:
     import tomllib
 
@@ -170,16 +183,19 @@ def test_the_source_distribution_ships_what_a_release_needs() -> None:
         assert wanted in included
 
 
+@pytest.mark.repo
 def test_the_package_asks_for_a_python_it_is_written_for() -> None:
     wanted = check_package.pyproject().get("requires-python")
     assert wanted == ">=3.12"
 
 
+@pytest.mark.repo
 def test_click_is_the_only_thing_it_needs_to_run() -> None:
     direct = check_package.pyproject().get("dependencies")
     assert direct == ["click==8.1.8"]
 
 
+@pytest.mark.repo
 def test_the_console_script_is_the_one_the_readme_says() -> None:
     scripts = check_package.pyproject().get("scripts")
     assert scripts == {"gemwalk": "gemwalk.cli.main:run"}

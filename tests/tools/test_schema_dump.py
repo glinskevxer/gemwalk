@@ -11,10 +11,12 @@ from gemwalk.tools import schema_dump
 from gemwalk.tools.walker import repo_root
 
 
+@pytest.mark.repo
 def test_the_schema_file_on_disk_is_current() -> None:
     assert schema_dump.main(["--check"]) == 0
 
 
+@pytest.mark.repo
 def test_the_file_is_in_the_checkout() -> None:
     assert (repo_root() / schema_dump.TARGET).exists()
 

@@ -39,6 +39,7 @@ run build_design "$python" -m gemwalk.tools.build_design --check
 
 echo "tests"
 run pytest "$python" -m pytest -q "$@"
+run repo-tests "$python" -m pytest -q -m repo
 run smoke "$python" -m gemwalk.tools.smoke --quiet
 
 if [ "${#failed[@]}" -gt 0 ]; then

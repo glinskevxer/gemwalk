@@ -16,6 +16,7 @@ def a_module(source: str, name: str = "gemwalk.report.probe") -> Module:
     return Module(package_root() / "report" / "probe.py", name, ast.parse(source))
 
 
+@pytest.mark.repo
 def test_no_module_outside_the_store_writes_sql() -> None:
     assert check_sql.main() == 0
 
@@ -51,6 +52,7 @@ def test_the_walker_finds_every_string_in_a_module() -> None:
     assert {text for _, text in found} >= {"one", "two"}
 
 
+@pytest.mark.repo
 def test_every_foreign_key_in_the_schema_has_an_index() -> None:
     assert check_indexes.main() == 0
 
@@ -84,6 +86,7 @@ def test_a_key_that_is_the_primary_key_needs_no_second_index() -> None:
         assert check_indexes.faults_in(book) == []
 
 
+@pytest.mark.repo
 @pytest.mark.parametrize("table", ["device", "reading", "exceedance", "hit", "work_order"])
 def test_the_tables_that_carry_keys_have_their_indexes(table: str) -> None:
     with Book.memory() as book:
